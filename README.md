@@ -1,24 +1,20 @@
-Contributing to NovaTurn
-Thank you for your interest in contributing to NovaTurn, a premium media player built with Python, PyQt5, and VLC.
-This project has a frozen architecture and a strict build pipeline, so please read this guide carefully before making
-changes.
-NovaTurn’s stability depends on maintaining:
-a fixed folder structure
-a fixed asset-loading system
-a fixed VLC bootstrap
-a fixed PyInstaller spec
-a fixed installer script
-Following these rules ensures that NovaTurn continues to build and run correctly in:
-development mode
-PyInstaller EXE mode
-installer mode
-clean Windows machines
-1. Code of Conduct
-Be respectful, constructive, and collaborative. NovaTurn is a craftsmanship-driven project — clarity and maintainability
-matter.
-2. Project Structure (Frozen)
-The folder structure must remain exactly as follows:
+NovaTurn — Premium Media Player for Windows
+NovaTurn is a modern, cinematic media player built with Python, PyQt5, and VLC, designed to deliver a polished, re
+sponsive, and visually rich experience. It features a custom on-screen keyboard, dynamic UI elements, a powerful me
+dia database, and a fully self-contained Windows installer.
+NovaTurn is engineered with a professional build pipeline, PyInstaller-safe asset loading, and a frozen folder struc
+ture to ensure stability across development, EXE builds, and clean-machine installations.
+Features
 Code
+Audio & Video Playback powered by VLC
+Modern UI built with PyQt5
+Cinematic design with custom banners, icons, and animations
+Mini On-Screen Keyboard (OSK) for touch-friendly input
+Media Library with metadata extraction (Mutagen)
+Plugin-ready architecture
+Password-protected sections
+Fully self-contained Windows installer (no Python required)
+Project Structure
 MicksMediaPlayer/
 │
 ├── Run.py
@@ -37,105 +33,111 @@ MicksMediaPlayer/
 ├── dist/
 ├── build/
 └── Output/
-Do not:
-Move or rename folders
-Add new top-level folders
-Place runtime assets outside app/
-Do:
-Keep all runtime assets inside app/
-Keep all build artifacts outside app/
-    3. Asset Loading Rules
-All assets must be loaded using the universal loader:
+Rules
+All runtime assets live inside app/
+All build artifacts (dist/, build/, Output/) live outside app/
+Folder names and locations are frozen and must not be changed
+    Universal Asset Loader
+NovaTurn uses a PyInstaller-safe loader that works in:
+Dev mode
+EXE mode
+Installer mode
+Clean machines
 python
 def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.dirname(os.path.dirname(__file__)), relat
 ive_path)
-Do not:
-Use absolute paths
-Use os.getcwd()
-Use __file__ directly for assets
-Hard-code Windows paths
-Do:
-Use relative paths like:
+Example usage:
 python
 resource_path("banners/NovaTurn_OSK.png")
 resource_path("assets/branding/novaturn.ico")
 resource_path("vlc")
-  4. VLC Bootstrap (Protected)
-The VLC bootstrap in main.py is frozen.
-Do not:
-Modify the VLC environment variables
-Change the VLC folder location
-Rename or restructure app/vlc/
-Remove or alter DLL loading logic
-Do:
-Keep VLC exactly where it is
-Add new VLC plugins only if required
-5. Build Pipeline (Frozen)
-All contributors must follow the official build process.
-Step A — Clean (optional)
+  VLC Integration
+NovaTurn bundles a full VLC runtime inside:
+Code
+app/vlc/
+The VLC bootstrap:
+Sets PYTHON_VLC_LIB_PATH
+Sets VLC_PLUGIN_PATH
+Ensures DLLs load correctly on Windows
+Works in both dev and EXE mode
+This section of the codebase is protected and must not be modified.
+  Build Pipeline
+1. Clean (optional but recommended)
 Delete:
 build/
 dist/
-Step B — Build EXE
+2. Build the EXE
+From the project root:
 Code
 & "C:\Program Files\Python314\python.exe" -m PyInstaller app\NovaTurn.spec
-Step C — Build Installer
+Output:
+Code
+dist/NovaTurn/
+3. Build the Installer
 Open Inno Setup and compile:
 Code
 NovaTurnInstaller.iss
-Do not:
-Modify the .spec file
-Modify the .iss installer paths
-Add new PyInstaller hooks unless approved
-6. Testing Requirements
-Before submitting changes, test NovaTurn in:
-Dev mode
-Code
-python Run.py
-EXE mode
-Code
-dist/NovaTurn/NovaTurn.exe
-Installer mode
+Output:
 Code
 Output/NovaTurnSetup.exe
-Clean machine
+This installer is fully self-contained and works on clean Windows machines.
+    Testing Workflow
+Test NovaTurn in all environments:
+  Dev mode
+Code
+python Run.py
+  EXE mode
+Code
+dist/NovaTurn/NovaTurn.exe
+  Installer mode
+Code
+Output/NovaTurnSetup.exe
+  Clean machine
 A Windows machine with:
 no Python
 no VLC
 no dev tools
-This ensures the build is fully self-contained.
-7. Code Style
-Use clear, descriptive variable names
-Keep functions small and modular
-Avoid unnecessary complexity
-Comment only where logic is non-obvious
-Follow PEP8 where practical
-8. Protected Files
-The following files must not be modified without explicit approval:
-NovaTurn.spec
-NovaTurnInstaller.iss
-app/vlc/
-VLC bootstrap in main.py
-resource_path() implementation
-Folder structure
-These are foundational to NovaTurn’s stability.
-9. Submitting Changes
+This confirms the build is fully self-contained.
+欄 Contributor Guidelines
+Anyone contributing to NovaTurn must follow these rules:
+Do not move or rename folders
+Do not modify the VLC bootstrap
+Do not bypass resource_path()
+Do not modify the .spec file
+Do not modify installer paths
+Do not introduce absolute paths
+Do not add assets outside app/
+Breaking these rules risks breaking:
+EXE builds
+installer builds
+clean-machine compatibility
+  Release Workflow
 1st
-2ndFork the repository
+2ndUpdate version in .iss
 3rd
-4thCreate a feature branch
+4thClean build
 5th
-6thMake your changes
+6thBuild EXE
 7th
-8thTest in all environments
+8thBuild installer
 9th
-10thSubmit a pull request with:
-a clear description
-screenshots if UI changes
-explanation of why the change is needed
-10. Thank You
-Your contributions help NovaTurn grow into a polished, professional media experience. Thank you for respecting the
-architecture and helping keep the project stable and beautiful.
+10thTest on clean machine
+11th
+12thArchive installer
+13th
+14thTag release in GitHub
+15th
+License
+(Add your license here — MIT, GPL, proprietary, etc.)
+Credits
+NovaTurn is built with:
+Python
+PyQt5
+VLC
+Mutagen
+Inno Setup
+PyInstaller
+And a lot of craftsmanship, iteration, and attention to detail
