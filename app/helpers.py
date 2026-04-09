@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # helpers.py
 import platform
 import ctypes
@@ -153,7 +152,6 @@ def add_to_recently_played(db, media_id: int):
     except Exception as e:
         print("Failed to add recently played:", e)
 
-=======
 # helpers.py
 import platform
 import ctypes
@@ -308,4 +306,3 @@ def add_to_recently_played(db, media_id: int):
     except Exception as e:
         print("Failed to add recently played:", e)
 
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
