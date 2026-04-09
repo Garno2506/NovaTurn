@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # app/ui/widgets.py
 from PyQt5 import QtCore, QtGui, QtWidgets
 import random
@@ -57,7 +57,7 @@ class EqualizerWidget(QtWidgets.QWidget):
             x += bar_width + gap
 
         painter.end()
-=======
+
 # app/ui/widgets.py
 from PyQt5 import QtCore, QtGui, QtWidgets
 import random
@@ -116,4 +116,4 @@ class EqualizerWidget(QtWidgets.QWidget):
             x += bar_width + gap
 
         painter.end()
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
+

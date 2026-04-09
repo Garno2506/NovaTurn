@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from PyQt5 import QtWidgets, QtCore
 import os
 import csv
@@ -372,7 +371,7 @@ class LibraryManagementMixin:
             QtWidgets.QMessageBox.information(self, "Import", "Library imported successfully.")
         except Exception as e:
             QtWidgets.QMessageBox.warning(self, "Import Error", f"Could not import library:\n{e}")
-=======
+
 from PyQt5 import QtWidgets, QtCore
 import os
 import csv
@@ -746,4 +745,4 @@ class LibraryManagementMixin:
             QtWidgets.QMessageBox.information(self, "Import", "Library imported successfully.")
         except Exception as e:
             QtWidgets.QMessageBox.warning(self, "Import Error", f"Could not import library:\n{e}")
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
+

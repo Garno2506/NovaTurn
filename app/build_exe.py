@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import os
 import sys
 import subprocess
@@ -68,7 +67,6 @@ if __name__ == "__main__":
     build_exe(sys.argv[1])
 
 
-=======
 import os
 import sys
 import subprocess
@@ -138,4 +136,4 @@ if __name__ == "__main__":
     build_exe(sys.argv[1])
 
 
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
+

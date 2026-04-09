@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # app/ui/statistics_mixin.py
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtChart import (
@@ -183,7 +182,7 @@ class StatisticsMixin:
 
         self.stats_scroll_area.setWidget(stats_widget)
         self.stats_scroll_area.setWidgetResizable(True)
-=======
+
 # app/ui/statistics_mixin.py
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtChart import (
@@ -368,5 +367,5 @@ class StatisticsMixin:
 
         self.stats_scroll_area.setWidget(stats_widget)
         self.stats_scroll_area.setWidgetResizable(True)
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
+
         self.stats_layout.addWidget(self.stats_scroll_area)

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ; --- Versioning (safe mode) ---
 #ifndef MyAppVersion
   #define MyAppVersion "1.0.0.0"
@@ -80,4 +79,4 @@ Name: "{commondesktop}\NovaTurn"; Filename: "{app}\NovaTurn.exe"; WorkingDir: "{
 Filename: "{app}\NovaTurn.exe"; Flags: nowait postinstall
 
 
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
+

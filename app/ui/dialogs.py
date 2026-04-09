@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from PyQt5 import QtWidgets, QtCore
 import os
 
@@ -247,7 +246,7 @@ class DialogsMixin:
         btn_close.clicked.connect(dialog.close)
 
         dialog.exec_()
-=======
+
 from PyQt5 import QtWidgets, QtCore
 import os
 
@@ -496,4 +495,4 @@ class DialogsMixin:
         btn_close.clicked.connect(dialog.close)
 
         dialog.exec_()
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
+

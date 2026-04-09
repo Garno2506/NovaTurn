@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 import os
@@ -104,7 +104,7 @@ class MiniKeyboard(QtWidgets.QFrame):
 
     def keyPressEvent(self, event):
         event.accept()
-=======
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 import os
@@ -210,4 +210,4 @@ class MiniKeyboard(QtWidgets.QFrame):
 
     def keyPressEvent(self, event):
         event.accept()
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
+

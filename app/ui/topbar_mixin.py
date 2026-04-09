@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # app/ui/topbar_mixin.py
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -138,7 +137,7 @@ class TopBarMixin:
         top_bar.addWidget(self.login_button)
 
         return top_bar
-=======
+
 # app/ui/topbar_mixin.py
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -278,4 +277,4 @@ class TopBarMixin:
         top_bar.addWidget(self.login_button)
 
         return top_bar
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
+

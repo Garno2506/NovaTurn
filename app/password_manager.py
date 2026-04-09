@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # app/password_manager.py
 import os
 import json
@@ -79,7 +78,7 @@ class PasswordManager:
     def reset_to_default(self) -> None:
         self._write_password(self.default_password)
 
-=======
+
 # app/password_manager.py
 import os
 import json
@@ -160,4 +159,4 @@ class PasswordManager:
     def reset_to_default(self) -> None:
         self._write_password(self.default_password)
 
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
+

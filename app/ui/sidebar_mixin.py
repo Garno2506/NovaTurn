@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # app/ui/sidebar_mixin.py
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -73,7 +72,7 @@ class SidebarMixin:
             self._sidebar_expanded = True
 
         self._sidebar_anim.start()
-=======
+
 # app/ui/sidebar_mixin.py
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -148,4 +147,3 @@ class SidebarMixin:
             self._sidebar_expanded = True
 
         self._sidebar_anim.start()
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b

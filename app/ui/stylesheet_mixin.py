@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from PyQt5 import QtWidgets
 
 class StylesMixin:
@@ -198,7 +197,6 @@ class StylesMixin:
             """
         )
 
-=======
 from PyQt5 import QtWidgets
 
 class StylesMixin:
@@ -398,4 +396,4 @@ class StylesMixin:
             """
         )
 
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
+

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import sys
 import os
 import random
@@ -2056,7 +2055,7 @@ def main():
 if __name__ == "__main__":
     main()
 
-=======
+
 import sys
 import os
 import random
@@ -4114,4 +4113,4 @@ def main():
 if __name__ == "__main__":
     main()
 
->>>>>>> be9547aaccb1857afa059ff99cc82f20dba6ff7b
+
