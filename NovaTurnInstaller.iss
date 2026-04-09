@@ -19,23 +19,19 @@ WizardStyle=modern
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "Create a &desktop shortcut";
-GroupDescription: "Additional icons:"; Flags: unchecked
+Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional icons:"; Flags: unchecked
 
 [Files]
 ; Copy the entire PyInstaller output folder
 Source: "dist\NovaTurn\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
-
-; Copy the icon file so shortcuts can use it
 Source: "app\assets\branding\novaturn.ico"; DestDir: "{app}"; Flags: ignoreversion
 
-[Icons]
-Name: "{group}\NovaTurn"; Filename: "{app}\NovaTurn.exe";
-WorkingDir: "{app}"; IconFilename: "{app}\NovaTurn.ico"
 
-Name: "{commondesktop}\NovaTurn"; Filename: "{app}\NovaTurn.exe";
-WorkingDir: "{app}"; IconFilename: "{app}\NovaTurn.ico"; Tasks: desktopicon
+[Icons]
+Name: "{group}\NovaTurn"; Filename: "{app}\NovaTurn.exe"; WorkingDir: "{app}"; IconFilename: "{app}\NovaTurn.ico"
+Name: "{commondesktop}\NovaTurn"; Filename: "{app}\NovaTurn.exe"; WorkingDir: "{app}"; IconFilename: "{app}\NovaTurn.ico"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\NovaTurn.exe"; Flags: nowait postinstall
+
 
