@@ -15,14 +15,14 @@ build/
 dist/
 *.spec
 
-# Keep NovaTurn.spec (protected)
+# Keep protected spec file
 !NovaTurn.spec
 
 # --- Inno Setup output ---
 Output/
 *.iss
 
-# Keep NovaTurnInstaller.iss (protected)
+# Keep protected installer script
 !NovaTurnInstaller.iss
 
 # --- Logs ---
@@ -39,3 +39,20 @@ Thumbs.db
 
 # --- Cache ---
 .cache/
+
+# --- GitHub Runner (IMPORTANT) ---
+# Prevent ALL runner files from polluting the repo
+_runner/
+_runner_migrated
+pipelineFolder.json
+v4.completed
+_work/
+_temp/
+*.completed
+*.runner
+*.service
+*.pid
+
+# --- GitHub Actions temp folders ---
+actions-runner/
+actions/
