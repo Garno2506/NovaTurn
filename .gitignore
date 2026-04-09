@@ -1,0 +1,41 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+
+# --- Virtual environments ---
+venv/
+env/
+.venv/
+
+# --- PyInstaller output ---
+build/
+dist/
+*.spec
+
+# Keep NovaTurn.spec (protected)
+!NovaTurn.spec
+
+# --- Inno Setup output ---
+Output/
+*.iss
+
+# Keep NovaTurnInstaller.iss (protected)
+!NovaTurnInstaller.iss
+
+# --- Logs ---
+*.log
+
+# --- OS files ---
+Thumbs.db
+.DS_Store
+
+# --- IDE ---
+.vscode/
+.idea/
+*.iml
+
+# --- Cache ---
+.cache/
