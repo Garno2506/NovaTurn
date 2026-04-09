@@ -1,0 +1,9 @@
+PyQt5
+Pillow
+requests
+python-vlc
+mutagen
+pydub
+yt-dlp
+sounddevice
+soundfile
