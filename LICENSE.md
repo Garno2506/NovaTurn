@@ -1,19 +1,8 @@
-This license:
-Keeps full ownership with you
-Forbids redistribution
-Forbids modification
-Forbids reverse-engineering
-Forbids repackaging
-Protects your branding, assets, and UI
-Protects your installer and build pipeline
-Protects your VLC integration and custom code
-Allows end-users to use the software, but nothing more
-This is the kind of license used by commercial desktop apps.
-Paste this into LICENSE.md at the root of your repo.
+
 NovaTurn Proprietary License Agreement
-Copyright © 2026 Michael. All rights reserved.
+Copyright © 2026 Michael Garnett. All rights reserved.
 This software, including all source code, compiled binaries, assets, images, icons, UI layouts, documentation, and asso
-ciated files (collectively, the “Software”), is the exclusive property of Michael.
+ciated files (collectively, the “Software”), is the exclusive property of Michael Garnett.
 By installing, copying, accessing, or using the Software, you agree to the terms of this License Agreement.
 1. Grant of License
 You are granted a non-exclusive, non-transferable, revocable license to install and use the Software for personal use
@@ -31,7 +20,7 @@ Use any part of the Software’s code, UI, assets, or design in another project
 Any violation of these restrictions terminates your license immediately.
 3. Ownership
 The Software is licensed, not sold.
-All rights, title, and interest in the Software remain the exclusive property of Michael, including but not limited to:
+All rights, title, and interest in the Software remain the exclusive property of Michael Garnett, including but not limited to:
 Source code
 Compiled binaries
 UI/UX design
