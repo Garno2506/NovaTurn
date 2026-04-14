@@ -469,6 +469,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 #  CHUNK B — FULL UI BUILD + STYLESHEET (FINAL FIXED VERSION)
 # ============================================================
 
+
     # ------------------------------------------------------------
     # HELP WINDOW HANDLER
     # ------------------------------------------------------------
