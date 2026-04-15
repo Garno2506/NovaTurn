@@ -1031,9 +1031,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             """
         )
 
-
-
-
         columns.addWidget(self.help_col1)
 
         # Column 2
@@ -1069,9 +1066,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
         # Store index for switching
         self.HELP_PAGE_INDEX = self.stacked.indexOf(self.page_help)
-
-
-
 
     # ============================================================
     #         MENU + SIGNAL CONNECTIONS (UPDATED + FIXED)
