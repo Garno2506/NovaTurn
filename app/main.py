@@ -1,3 +1,4 @@
+from cProfile import label
 import sys
 import os
 import random
@@ -92,7 +93,7 @@ from app.ui.osk import MiniKeyboard
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import QSplashScreen, QLabel
 from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtCore import QTimer, QPropertyAnimation, QEasingCurve, QPoint
+from PyQt5.QtCore import QTimer, QPropertyAnimation, QEasingCurve, QPoint, Qt
 from app.ui.osk_final import MiniKeyboard
 from app.help_text import HELP_COL1
 from app.help_text import HELP_COL2
