@@ -95,7 +95,8 @@ from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import QTimer, QPropertyAnimation, QEasingCurve, QPoint
 from app.ui.osk_final import MiniKeyboard
 from app.help_text import HELP_COL1
-
+from app.help_text import HELP_COL2
+from app.help_text import HELP_COL3
 
 # ------------------------------------------------------------
 # Pill-style delegate for "All Artists"
@@ -1000,6 +1001,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.stacked.addWidget(self.page_stats)
 
         # ---------------- Help page ----------------
+        #--------------------------------------------
         self.page_help = QtWidgets.QWidget()
         help_layout = QtWidgets.QVBoxLayout(self.page_help)
         help_layout.setContentsMargins(32, 32, 32, 32)
@@ -1019,7 +1021,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.help_col1.setStyleSheet(
             "font-size: 16px; color: #E0E0E0; background-color: #1E1E1E;"
         )
-        #--------Add your instructions for column 1 here. You can format it as needed using HTML or plain text.--------
+
         self.help_col1.setHtml(HELP_COL1)
 
 
@@ -1031,11 +1033,9 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.help_col2.setStyleSheet(
             "font-size: 16px; color: #E0E0E0; background-color: #1E1E1E;"
         )
-        #--------Add your instructions for column 2 here. You can format it as needed using HTML or plain text.--------
-        self.help_col2.setText(
-            "Section 2\n\n"
-            "Add more instructions here."
-        )
+
+        self.help_col2.setHtml(HELP_COL2)
+
         columns.addWidget(self.help_col2)
 
         # Column 3
@@ -1044,11 +1044,8 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.help_col3.setStyleSheet(
             "font-size: 16px; color: #E0E0E0; background-color: #1E1E1E;"
         )
-        #--------Add your instructions for column 3 here. You can format it as needed using HTML or plain text.--------
-        self.help_col3.setText(
-            "Section 3\n\n"
-            "Add additional notes here."
-        )
+
+        self.help_col3.setHtml(HELP_COL3)
         columns.addWidget(self.help_col3)
 
         help_layout.addLayout(columns)
