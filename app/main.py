@@ -1018,7 +1018,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
         # Column 1
         self.help_col1 = QtWidgets.QTextEdit()
-        self.help_col1.setReadOnly(False)
+        self.help_col1.setReadOnly(True)
         self.help_col1.setStyleSheet(
             "font-size: 16px; color: #E0E0E0; background-color: #1E1E1E;"
         )
@@ -1030,7 +1030,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
         # Column 2
         self.help_col2 = QtWidgets.QTextEdit()
-        self.help_col2.setReadOnly(False)
+        self.help_col2.setReadOnly(True)
         self.help_col2.setStyleSheet(
             "font-size: 16px; color: #E0E0E0; background-color: #1E1E1E;"
         )
@@ -1041,7 +1041,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
         # Column 3
         self.help_col3 = QtWidgets.QTextEdit()
-        self.help_col3.setReadOnly(False)
+        self.help_col3.setReadOnly(True)
         self.help_col3.setStyleSheet(
             "font-size: 16px; color: #E0E0E0; background-color: #1E1E1E;"
         )
