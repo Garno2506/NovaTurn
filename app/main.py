@@ -94,6 +94,7 @@ from PyQt5.QtWidgets import QSplashScreen, QLabel
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import QTimer, QPropertyAnimation, QEasingCurve, QPoint
 from app.ui.osk_final import MiniKeyboard
+from app.help_text import HELP_COL1
 
 
 # ------------------------------------------------------------
@@ -1019,17 +1020,8 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             "font-size: 16px; color: #E0E0E0; background-color: #1E1E1E;"
         )
         #--------Add your instructions for column 1 here. You can format it as needed using HTML or plain text.--------
-        self.help_col1.setHtml(
-            """
-            <h2 style="color: white;">Getting Started</h2>
+        self.help_col1.setHtml(HELP_COL1)
 
-            <ul>
-                <li>Default password: <b>letmein</b></li>
-                <li>Change your password on first login</li>
-                <li>Never share your password with others</li>
-            </ul>
-            """
-        )
 
         columns.addWidget(self.help_col1)
 
