@@ -2362,7 +2362,35 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
     # NAVIGATION HELPER
     # ------------------------------------------------------------
     def set_page(self, index: int):
+
+        # If leaving the Help page, clear highlights + reset search
+        if hasattr(self, "help_search") and self.stacked.currentIndex() == self.HELP_PAGE_INDEX:
+            self.help_search.clear()
+
+            # Clear highlights AND clear active selection in all columns
+            for editor in (self.help_col1, self.help_col2, self.help_col3):
+                cursor = editor.textCursor()
+                cursor.beginEditBlock()
+
+                # Remove background formatting
+                fmt = QtGui.QTextCharFormat()
+                fmt.setBackground(QtCore.Qt.transparent)
+                cursor.select(QtGui.QTextCursor.Document)
+                cursor.setCharFormat(fmt)
+
+                cursor.endEditBlock()
+
+                # IMPORTANT: clear the active selection (white highlight)
+                cursor.clearSelection()
+                editor.setTextCursor(cursor)
+
+            # Reset match state
+            self._help_matches = []
+            self._help_match_index = -1
+
+        # Switch page normally
         self.stacked.setCurrentIndex(index)
+
 
     # ------------------------------------------------------------
     # OSK EVENT FILTER (SLIDER PREVIEW + OSK + YOUTUBE HOVER + ENTER)
