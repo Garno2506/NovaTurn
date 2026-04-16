@@ -15,6 +15,18 @@ HELP_COL1 = """
         <li>Change your password after first login</li>
         <li>Never default your password with others</li>
     </ul>
+
+
+        <ul>
+        <li>Default password: <b>letmein</b></li>
+        <li>Change your password after first login</li>
+        <li>Never default your password with others</li>
+    </ul>
+        <ul>
+        <li>Default password: <b>letmein</b></li>
+        <li>Change your password after first login</li>
+        <li>Never default your password with others</li>
+    </ul>
     """
 
 
@@ -28,6 +40,25 @@ HELP_COL2 = """
 <p>
     To change your password, go to the settings menu and select "Change Password".
 </p>
+
+    <ul>
+        <li>Default password: <b>letmein</b></li>
+        <li>Change your password after first login</li>
+        <li>Never default your password with others</li>
+    </ul>
+
+        <ul>
+        <li>Default password: <b>letmein</b></li>
+        <li>Change your password after first login</li>
+        <li>Never default your password with others</li>
+    </ul>
+        <ul>
+        <li>Default password: <b>letmein</b></li>
+        <li>Change your password after first login</li>
+        <li>Never default your password with others</li>
+    </ul>
+
+
 """
 #    End of HELP_COL2
 HELP_COL3 = """
@@ -39,6 +70,27 @@ HELP_COL3 = """
 <p>
     <a href="https://www.novaturnmediaplayer.com/">Visit NovaTurn Media Player.com</a>
 </p>
+
+    <ul>
+        <li>Default password: <b>letmein</b></li>
+        <li>Change your password after first login</li>
+        <li>Never default your password with others</li>
+    </ul>
+
+        <ul>
+        <li>Default password: <b>letmein</b></li>
+        <li>Change your password after first login</li>
+        <li>Never default your password with others</li>
+    </ul>
+        <ul>
+        <li>Default password: <b>letmein</b></li>
+        <li>Change your password after first login</li>
+        <li>Never default your password with others</li>
+    </ul>
+
+
+
+
 """
 #    End of HELP_COL3
 
