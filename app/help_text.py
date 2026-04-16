@@ -5,7 +5,7 @@ HELP_COL1 = """
     <ul>
         <li>Default password: <b>letmein</b></li>
         <li>Change your password after first login</li>
-        <li>Never share your password with others</li>
+        <li>Never share your password with others if you want to keep it secure</li>
     </ul>
 
     <h2 style="color: white;">Getting Started</h2>
@@ -13,7 +13,7 @@ HELP_COL1 = """
     <ul>
         <li>Default password: <b>letmein</b></li>
         <li>Change your password after first login</li>
-        <li>Never default your password with others</li>
+        <li>Never default your password with others Garno</li>
     </ul>
 
 
@@ -25,7 +25,7 @@ HELP_COL1 = """
         <ul>
         <li>Default password: <b>letmein</b></li>
         <li>Change your password after first login</li>
-        <li>Never default your password with others</li>
+        <li>Never default your password with others Mick</li>
     </ul>
     """
 
@@ -43,8 +43,8 @@ HELP_COL2 = """
 
     <ul>
         <li>Default password: <b>letmein</b></li>
-        <li>Change your password after first login</li>
-        <li>Never default your password with others</li>
+        <li>Change your password after first login if you want to keep it secure</li>
+        <li>Never share your password with others</li>
     </ul>
 
         <ul>
@@ -55,7 +55,7 @@ HELP_COL2 = """
         <ul>
         <li>Default password: <b>letmein</b></li>
         <li>Change your password after first login</li>
-        <li>Never default your password with others</li>
+        <li>Never default your password with others Garnett</li>
     </ul>
 
 
@@ -74,7 +74,7 @@ HELP_COL3 = """
     <ul>
         <li>Default password: <b>letmein</b></li>
         <li>Change your password after first login</li>
-        <li>Never default your password with others</li>
+        <li>Never default your password with others Garno if you want to keep it secure</li>
     </ul>
 
         <ul>
