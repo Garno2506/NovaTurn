@@ -453,7 +453,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
                 # Clear highlights when switching columns
         # When switching columns, clear ALL highlights and re-run search only on the active column
         def _help_column_changed():
-            # Clear highlights in all columns
+            # Clear green highlights in all columns
             for editor in (self.help_col1, self.help_col2, self.help_col3):
                 cursor = editor.textCursor()
                 cursor.beginEditBlock()
@@ -465,6 +465,16 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
             # Re-run search on the newly selected column
             self._help_search_update(self.help_search.text())
+
+            # CRITICAL FIX:
+            # Reactivate the cursor so Enter works again
+            active = self._help_get_active_editor()
+            cursor = active.textCursor()
+            cursor.setPosition(0)          # <-- THIS is the missing piece
+            active.setTextCursor(cursor)
+            active.ensureCursorVisible()
+            self.help_search.setFocus()
+
 
         self.rb_col1.toggled.connect(_help_column_changed)
         self.rb_col2.toggled.connect(_help_column_changed)
@@ -2423,6 +2433,12 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             QtCore.Qt.Key_Return,
             QtCore.Qt.Key_Enter,
         ):
+
+            # Allow Help Page search bar to handle Enter normally
+            if obj is self.help_search:
+                return False
+
+
 
             # Library search Enter
             if self._kb_target is self.search_edit:
