@@ -452,6 +452,8 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
                 # Clear highlights when switching columns
         # When switching columns, clear ALL highlights and re-run search only on the active column
         def _help_column_changed():
+        # NEW: Update match counter after switching columns (delayed so matches are ready)
+            QtCore.QTimer.singleShot(0, self._help_update_match_counter)
             # Clear green highlights in all columns
             for editor in (self.help_col1, self.help_col2, self.help_col3):
                 cursor = editor.textCursor()
@@ -469,10 +471,20 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             # Reactivate the cursor so Enter works again
             active = self._help_get_active_editor()
             cursor = active.textCursor()
-            cursor.setPosition(0)          # <-- THIS is the missing piece
+            cursor.setPosition(0)
             active.setTextCursor(cursor)
             active.ensureCursorVisible()
             self.help_search.setFocus()
+
+        # NEW: Update match counter after switching columns
+        count = len(self._help_matches)
+        if count == 0:
+            self.help_match_label.setText("No matches found")
+        elif count == 1:
+            self.help_match_label.setText("1 match found")
+        else:
+            self.help_match_label.setText(f"{count} matches found")
+
 
         self.rb_col1.toggled.connect(_help_column_changed)
         self.rb_col2.toggled.connect(_help_column_changed)
@@ -499,12 +511,28 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             cursor.clearSelection()
             editor.setTextCursor(cursor)
 
+            # NEW: scroll to top
+            editor.verticalScrollBar().setValue(0)
+
         # Reset match state
         self._help_matches = []
         self._help_match_index = -1
 
+        # Reset match counter
+        self.help_match_label.setText("")
+
         # Keep focus on search bar
         self.help_search.setFocus()
+    def _help_update_match_counter(self):
+        count = len(self._help_matches)
+        if count == 0:
+            self.help_match_label.setText("No matches found")
+        elif count == 1:
+            self.help_match_label.setText("1 match found")
+        else:
+            self.help_match_label.setText(f"{count} matches found")
+
+
 
     # ------------------------------------------------------------
     # Attach VLC events
@@ -1096,6 +1124,17 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
         help_layout.addLayout(search_controls)
 
+
+        # Match counter label
+                # NEW: Update match counter after switching columns (delayed so matches are ready)
+        self.help_match_label = QtWidgets.QLabel("")
+        self.help_match_label.setStyleSheet("color: #888; font-size: 12px;")
+        help_layout.addWidget(self.help_match_label)
+
+
+
+
+
         # Internal state for search navigation
         self._help_matches = []
         self._help_match_index = -1
@@ -1359,6 +1398,17 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             self._help_match_index = 0
 
         self._help_jump_to_match()
+
+
+                # Update match counter
+        count = len(self._help_matches)
+        if count == 0:
+            self.help_match_label.setText("No matches found")
+        elif count == 1:
+            self.help_match_label.setText("1 match found")
+        else:
+            self.help_match_label.setText(f"{count} matches found")
+
 
     # ------------------------------------------------------------
     # Context menu for library list
@@ -2404,7 +2454,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
                 cursor = editor.textCursor()
                 cursor.beginEditBlock()
 
-                # Remove background formatting
                 fmt = QtGui.QTextCharFormat()
                 fmt.setBackground(QtCore.Qt.transparent)
                 cursor.select(QtGui.QTextCursor.Document)
@@ -2412,16 +2461,20 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
                 cursor.endEditBlock()
 
-                # IMPORTANT: clear the active selection (white highlight)
                 cursor.clearSelection()
                 editor.setTextCursor(cursor)
+
+                # NEW: scroll to top
+                editor.verticalScrollBar().setValue(0)
 
             # Reset match state
             self._help_matches = []
             self._help_match_index = -1
+            self.help_match_label.setText("")
 
         # Switch page normally
         self.stacked.setCurrentIndex(index)
+
 
     # ------------------------------------------------------------
     # OSK EVENT FILTER (SLIDER PREVIEW + OSK + YOUTUBE HOVER + ENTER)
