@@ -453,7 +453,9 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         # When switching columns, clear ALL highlights and re-run search only on the active column
         def _help_column_changed():
         # NEW: Update match counter after switching columns (delayed so matches are ready)
-            QtCore.QTimer.singleShot(0, self._help_update_match_counter)
+                    # Delay position update until matches are rebuilt
+            QtCore.QTimer.singleShot(0, self._help_update_match_position)
+
             # Clear green highlights in all columns
             for editor in (self.help_col1, self.help_col2, self.help_col3):
                 cursor = editor.textCursor()
@@ -517,6 +519,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         # Reset match state
         self._help_matches = []
         self._help_match_index = -1
+        self.help_position_label.setText("")
 
         # Reset match counter
         self.help_match_label.setText("")
@@ -531,6 +534,17 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             self.help_match_label.setText("1 match found")
         else:
             self.help_match_label.setText(f"{count} matches found")
+
+    def _help_update_match_position(self):
+        if self._help_matches:
+            # Always show first match when switching columns
+            self._help_match_index = 0
+            pos = 1
+            total = len(self._help_matches)
+            self.help_position_label.setText(f"Match {pos} of {total}")
+        else:
+            self.help_position_label.setText("")
+            self.help_position_label.setText("")
 
 
 
@@ -1131,6 +1145,9 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.help_match_label.setStyleSheet("color: #888; font-size: 12px;")
         help_layout.addWidget(self.help_match_label)
 
+        self.help_position_label = QtWidgets.QLabel("")
+        self.help_position_label.setStyleSheet("color: #888; font-size: 12px;")
+        help_layout.addWidget(self.help_position_label)
 
 
 
@@ -1408,6 +1425,15 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             self.help_match_label.setText("1 match found")
         else:
             self.help_match_label.setText(f"{count} matches found")
+
+        # Update "Match X of Y"
+        if self._help_matches:
+            pos = self._help_match_index + 1
+            total = len(self._help_matches)
+            self.help_position_label.setText(f"Match {pos} of {total}")
+        else:
+            self.help_position_label.setText("")
+
 
 
     # ------------------------------------------------------------
@@ -2471,6 +2497,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             self._help_matches = []
             self._help_match_index = -1
             self.help_match_label.setText("")
+            self.help_position_label.setText("")
 
         # Switch page normally
         self.stacked.setCurrentIndex(index)
