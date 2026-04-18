@@ -448,6 +448,17 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.help_search.textChanged.connect(self._help_search_update)
         self.help_search.returnPressed.connect(self._help_search_next)
         self.help_clear_btn.clicked.connect(self._help_clear_search)
+        self.help_search.focusInEvent = self.help_search_focus_in
+
+    def help_search_focus_in(self, event):
+        import subprocess
+        try:
+            subprocess.Popen(r"C:\Program Files\Common Files\Microsoft Shared\ink\TabTip.exe")
+        except Exception:
+            pass
+
+        QtWidgets.QLineEdit.focusInEvent(self.help_search, event)
+
 
 
                 # Clear highlights when switching columns
@@ -478,6 +489,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             active.setTextCursor(cursor)
             active.ensureCursorVisible()
             self.help_search.setFocus()
+
 
         # NEW: Update match counter after switching columns
         count = len(self._help_matches)
@@ -546,6 +558,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         else:
             self.help_position_label.setText("")
             self.help_position_label.setText("")
+
 
 
 
@@ -2533,12 +2546,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         # SAFETY GUARD: ignore null objects
         if obj is None:
             return False
-
-        # --- IMPORTANT ---
-        # Allow Help Page search bar to receive all events (needed for Windows OSK)
-        if obj is self.help_search:
-            return False
-
 
         # ------------------------------------------------------------
         # OSK OPENS WHEN YOUTUBE SEARCH GETS FOCUS
