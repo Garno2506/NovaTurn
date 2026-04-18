@@ -449,6 +449,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.help_search.returnPressed.connect(self._help_search_next)
         self.help_clear_btn.clicked.connect(self._help_clear_search)
 
+
                 # Clear highlights when switching columns
         # When switching columns, clear ALL highlights and re-run search only on the active column
         def _help_column_changed():
@@ -1115,11 +1116,17 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         search_controls = QtWidgets.QHBoxLayout()
         search_controls.setSpacing(20)
 
-        # Clear button on the FAR LEFT
         self.rb_col1 = QtWidgets.QRadioButton("Search Column 1")
         self.rb_col2 = QtWidgets.QRadioButton("Search Column 2")
         self.rb_col3 = QtWidgets.QRadioButton("Search Column 3")
         self.rb_col1.setChecked(True)
+
+        # --- Make radio button text WHITE ---
+        rb_style = "color: white; font-size: 12px;"
+        self.rb_col1.setStyleSheet(rb_style)
+        self.rb_col2.setStyleSheet(rb_style)
+        self.rb_col3.setStyleSheet(rb_style)
+
 
         search_controls.addWidget(self.rb_col1)
         search_controls.addWidget(self.rb_col2)
@@ -1134,13 +1141,20 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.help_search = QtWidgets.QLineEdit()
         self.help_search.setPlaceholderText("Search help text… (Enter = next match)")
         self.help_search.setFixedHeight(32)
+
+        # --- ENABLE WINDOWS TOUCH KEYBOARD ---
+        self.help_search.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
+        self.help_search.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.help_search.setAttribute(QtCore.Qt.WA_AcceptTouchEvents, True)
+        self.help_search.setAttribute(QtCore.Qt.WA_MacShowFocusRect, True)
         search_controls.addWidget(self.help_search, 1)
 
         help_layout.addLayout(search_controls)
 
 
+
         # Match counter label
-                # NEW: Update match counter after switching columns (delayed so matches are ready)
+        # NEW: Update match counter after switching columns (delayed so matches are ready)
         self.help_match_label = QtWidgets.QLabel("")
         self.help_match_label.setStyleSheet("color: #888; font-size: 12px;")
         help_layout.addWidget(self.help_match_label)
