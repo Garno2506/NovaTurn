@@ -12,30 +12,61 @@ class OSKLineEdit(QtWidgets.QLineEdit):
         super().__init__(parent)
         self.setFixedHeight(32)
 
-        # SAFE + REQUIRED for Windows touch keyboard
+        # Required for Windows touch keyboard
         self.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
         self.setAttribute(QtCore.Qt.WA_AcceptTouchEvents, True)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
+    # ---------------------------------------------------------
+    # TOUCH-ONLY OSK TRIGGER
+    # ---------------------------------------------------------
+    def event(self, e):
+        if e.type() == QtCore.QEvent.TouchBegin:
+            QtCore.QTimer.singleShot(0, self._open_osk)
+        return super().event(e)
+
+    def focusInEvent(self, event):
+        # Do NOT open OSK on mouse click
+        super().focusInEvent(event)
+
+    # ---------------------------------------------------------
+    # GUARANTEED WINDOWS OSK (TextInputPanel COM API)
+    # ---------------------------------------------------------
+    def _open_osk(self):
+        try:
+            import comtypes.client
+            import ctypes
+
+            # Create TextInputPanel COM object
+            tip = comtypes.client.CreateObject("TextInputPanel.TextInputPanel")
+
+            # Attach OSK to this widget's window
+            hwnd = int(self.window().winId())
+            tip.AttachedEditWindow = hwnd
+
+            # Show the OSK
+            tip.Show()
+            return
+
+        except Exception:
+            pass
+
+        # Fallback: launch TabTip.exe
+        try:
+            QtCore.QProcess.startDetached(
+                r"C:\Program Files\Common Files\Microsoft Shared\ink\TabTip.exe"
+            )
+        except Exception:
+            pass
+
+    # ---------------------------------------------------------
+    # ENTER KEY EMITS SIGNAL
+    # ---------------------------------------------------------
     def keyPressEvent(self, event):
         if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
             self.enterPressed.emit()
         super().keyPressEvent(event)
 
-    def focusInEvent(self, event):
-        super().focusInEvent(event)
-        QtCore.QTimer.singleShot(0, self._open_osk)
-
-    def _open_osk(self):
-        try:
-            QtCore.QProcess.startDetached(
-                r"C:\Program Files\Common Files\Microsoft Shared\ink\TabTip.exe"
-            )
-            import ctypes
-            HWND = ctypes.windll.user32.GetForegroundWindow()
-            ctypes.windll.user32.PostMessageW(HWND, 0x0501, 0, 0)
-        except Exception:
-            pass
 
 class HelpPage(QtWidgets.QWidget):
     def __init__(self, parent=None):
