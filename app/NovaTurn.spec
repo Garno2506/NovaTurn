@@ -36,7 +36,12 @@ a = Analysis(
         (banners_path, 'banners'),
     ],
 
-    hiddenimports=[],
+    hiddenimports=[
+        'comtypes',
+        'comtypes.client',
+        'comtypes.gen',
+    ],
+
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -44,6 +49,7 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+
 
 pyz = PYZ(a.pure)
 
