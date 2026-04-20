@@ -11,29 +11,15 @@ class OSKLineEdit(QtWidgets.QLineEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedHeight(32)
-
-        # Required for Windows touch keyboard
         self.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
         self.setAttribute(QtCore.Qt.WA_AcceptTouchEvents, True)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
-    # ---------------------------------------------------------
-    # EXTERNAL USB TOUCHSCREEN FIX:
-    # Touch arrives as a mouse press → open OSK here
-    # ---------------------------------------------------------
     def mousePressEvent(self, event):
         QtCore.QTimer.singleShot(0, self._open_osk)
         super().mousePressEvent(event)
 
-    def focusInEvent(self, event):
-        # Do NOT open OSK on focus alone
-        super().focusInEvent(event)
-
-    # ---------------------------------------------------------
-    # GUARANTEED WINDOWS OSK (TextInputPanel COM API)
-    # ---------------------------------------------------------
     def _open_osk(self):
-        # Try COM API first
         try:
             import comtypes.client
             tip = comtypes.client.CreateObject("TextInputPanel.TextInputPanel")
@@ -44,7 +30,6 @@ class OSKLineEdit(QtWidgets.QLineEdit):
         except Exception:
             pass
 
-        # Fallback: TabTip.exe
         try:
             QtCore.QProcess.startDetached(
                 r"C:\Program Files\Common Files\Microsoft Shared\ink\TabTip.exe"
@@ -52,99 +37,103 @@ class OSKLineEdit(QtWidgets.QLineEdit):
         except Exception:
             pass
 
-    # ---------------------------------------------------------
-    # ENTER KEY EMITS SIGNAL
-    # ---------------------------------------------------------
     def keyPressEvent(self, event):
         if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
             self.enterPressed.emit()
         super().keyPressEvent(event)
 
 
+# ---------------------------------------------------------
+# Help Page
+# ---------------------------------------------------------
 class HelpPage(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # Enable touch + IME for Windows touch keyboard
         self.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
         self.setAttribute(QtCore.Qt.WA_AcceptTouchEvents, True)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
-        # -----------------------------
-        # Internal state
-        # -----------------------------
         self.current_column = 0
         self._help_matches = []
         self._help_match_index = -1
 
-        # -----------------------------
-        # Root layout
-        # -----------------------------
-        help_layout = QtWidgets.QVBoxLayout(self)
-        help_layout.setContentsMargins(32, 32, 32, 32)
-        help_layout.setSpacing(24)
+        main_layout = QtWidgets.QVBoxLayout(self)
+        main_layout.setContentsMargins(32, 32, 32, 32)
+        main_layout.setSpacing(20)
 
-        help_title = QtWidgets.QLabel("Help & Instructions")
-        help_title.setStyleSheet("color: white; font-size: 28px; font-weight: bold;")
-        help_layout.addWidget(help_title)
+        # ---------------------------------------------------------
+        # Title
+        # ---------------------------------------------------------
+        title = QtWidgets.QLabel("Help & Instructions")
+        title.setStyleSheet("color: white; font-size: 28px; font-weight: bold;")
+        main_layout.addWidget(title)
 
-        # -----------------------------
-        # Search bar row
-        # -----------------------------
-        search_bar_row = QtWidgets.QHBoxLayout()
-        search_bar_row.setSpacing(20)
-
+        # ---------------------------------------------------------
+        # Row 1 — Search bar
+        # ---------------------------------------------------------
         self.help_search = OSKLineEdit()
         self.help_search.setPlaceholderText("Search help text… (Enter = next match)")
-        search_bar_row.addWidget(self.help_search)
+        main_layout.addWidget(self.help_search)
 
-        help_layout.addLayout(search_bar_row)
+        # ---------------------------------------------------------
+        # Row 2 — Open Keyboard button
+        # ---------------------------------------------------------
+        self.osk_button = QtWidgets.QPushButton("Open Keyboard")
+        self.osk_button.setFixedHeight(36)
+        self.osk_button.clicked.connect(self._open_keyboard_manual)
+        main_layout.addWidget(self.osk_button, alignment=QtCore.Qt.AlignCenter)
 
-        # -----------------------------
-        # Search controls row
-        # -----------------------------
-        search_controls = QtWidgets.QHBoxLayout()
-        search_controls.setSpacing(20)
+        # ---------------------------------------------------------
+        # Row 3 — Clear button (left aligned)
+        # ---------------------------------------------------------
+        clear_row = QtWidgets.QHBoxLayout()
+        self.help_clear_btn = QtWidgets.QPushButton("Clear")
+        self.help_clear_btn.setFixedHeight(32)
+        clear_row.addWidget(self.help_clear_btn, alignment=QtCore.Qt.AlignLeft)
+        clear_row.addStretch()
+        main_layout.addLayout(clear_row)
+
+        # ---------------------------------------------------------
+        # Row 4 — Match counters
+        # ---------------------------------------------------------
+        self.help_match_label = QtWidgets.QLabel("0 matches")
+        self.help_match_label.setStyleSheet("color: #888; font-size: 12px;")
+        main_layout.addWidget(self.help_match_label)
+
+        self.help_position_label = QtWidgets.QLabel("")
+        self.help_position_label.setStyleSheet("color: #888; font-size: 12px;")
+        main_layout.addWidget(self.help_position_label)
+
+        # ---------------------------------------------------------
+        # Row 5 — Radio buttons centered above columns
+        # ---------------------------------------------------------
+        rb_row = QtWidgets.QHBoxLayout()
+        rb_row.setSpacing(40)
+
+        rb_row.addStretch()
 
         self.rb_col1 = QtWidgets.QRadioButton("Search Column 1")
         self.rb_col2 = QtWidgets.QRadioButton("Search Column 2")
         self.rb_col3 = QtWidgets.QRadioButton("Search Column 3")
         self.rb_col1.setChecked(True)
 
-        # Prevent radio buttons from stealing focus
-        self.rb_col1.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.rb_col2.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.rb_col3.setFocusPolicy(QtCore.Qt.NoFocus)
+        for rb in (self.rb_col1, self.rb_col2, self.rb_col3):
+            rb.setStyleSheet("color: white; font-size: 12px;")
+            rb.setFocusPolicy(QtCore.Qt.NoFocus)
 
-        rb_style = "color: white; font-size: 12px;"
-        self.rb_col1.setStyleSheet(rb_style)
-        self.rb_col2.setStyleSheet(rb_style)
-        self.rb_col3.setStyleSheet(rb_style)
+        rb_row.addWidget(self.rb_col1)
+        rb_row.addStretch()
+        rb_row.addWidget(self.rb_col2)
+        rb_row.addStretch()
+        rb_row.addWidget(self.rb_col3)
+        rb_row.addStretch()
 
-        search_controls.addWidget(self.rb_col1)
-        search_controls.addWidget(self.rb_col2)
-        search_controls.addWidget(self.rb_col3)
+        main_layout.addLayout(rb_row)
 
-        self.help_clear_btn = QtWidgets.QPushButton("Clear")
-        self.help_clear_btn.setFixedHeight(32)
-        search_controls.addWidget(self.help_clear_btn)
-
-        help_layout.addLayout(search_controls)
-
-        # -----------------------------
-        # Match labels
-        # -----------------------------
-        self.help_match_label = QtWidgets.QLabel("0 matches")
-        self.help_match_label.setStyleSheet("color: #888; font-size: 12px;")
-        help_layout.addWidget(self.help_match_label)
-
-        self.help_position_label = QtWidgets.QLabel("")
-        self.help_position_label.setStyleSheet("color: #888; font-size: 12px;")
-        help_layout.addWidget(self.help_position_label)
-
-        # -----------------------------
-        # Three-column help layout
-        # -----------------------------
+        # ---------------------------------------------------------
+        # Row 6 — Three columns
+        # ---------------------------------------------------------
         columns = QtWidgets.QHBoxLayout()
         columns.setSpacing(24)
 
@@ -160,19 +149,40 @@ class HelpPage(QtWidgets.QWidget):
         columns.addWidget(self.help_col2)
         columns.addWidget(self.help_col3)
 
-        help_layout.addLayout(columns)
-        help_layout.addStretch()
+        main_layout.addLayout(columns)
+        main_layout.addStretch()
 
-        # -----------------------------
+        # ---------------------------------------------------------
         # Signals
-        # -----------------------------
+        # ---------------------------------------------------------
         self.help_search.textChanged.connect(self._run_search)
         self.help_search.enterPressed.connect(self._next_match)
         self.help_clear_btn.clicked.connect(self._clear_search)
 
-        self.rb_col1.toggled.connect(lambda checked: checked and self._switch_column(0))
-        self.rb_col2.toggled.connect(lambda checked: checked and self._switch_column(1))
-        self.rb_col3.toggled.connect(lambda checked: checked and self._switch_column(2))
+        self.rb_col1.toggled.connect(lambda c: c and self._switch_column(0))
+        self.rb_col2.toggled.connect(lambda c: c and self._switch_column(1))
+        self.rb_col3.toggled.connect(lambda c: c and self._switch_column(2))
+
+    # ---------------------------------------------------------
+    # Manual OSK button
+    # ---------------------------------------------------------
+    def _open_keyboard_manual(self):
+        try:
+            import comtypes.client
+            tip = comtypes.client.CreateObject("TextInputPanel.TextInputPanel")
+            hwnd = int(self.window().winId())
+            tip.AttachedEditWindow = hwnd
+            tip.Show()
+            return
+        except Exception:
+            pass
+
+        try:
+            QtCore.QProcess.startDetached(
+                r"C:\Program Files\Common Files\Microsoft Shared\ink\TabTip.exe"
+            )
+        except Exception:
+            pass
 
     # ---------------------------------------------------------
     # Column factory
@@ -248,7 +258,6 @@ class HelpPage(QtWidgets.QWidget):
     def _next_match(self):
         if not self._help_matches:
             return
-
         self._help_match_index = (self._help_match_index + 1) % len(self._help_matches)
         self._jump_to_match(self._help_match_index)
 
