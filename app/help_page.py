@@ -13,6 +13,11 @@ class OSKLineEdit(QtWidgets.QLineEdit):
         super().__init__(parent)
         self.setFixedHeight(32)
 
+        # SAFE + REQUIRED for Windows touch keyboard
+        self.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
+        self.setAttribute(QtCore.Qt.WA_AcceptTouchEvents, True)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+
     def keyPressEvent(self, event):
         if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
             self.enterPressed.emit()
@@ -24,17 +29,15 @@ class OSKLineEdit(QtWidgets.QLineEdit):
 
     def _open_osk(self):
         try:
-        # Launch TabTip (Windows touch keyboard)
             QtCore.QProcess.startDetached(
-                r"C:\\Program Files\\Common Files\\Microsoft Shared\\ink\\TabTip.exe"
+                r"C:\Program Files\Common Files\Microsoft Shared\ink\TabTip.exe"
             )
-
-        # COM automation nudge (forces keyboard to appear)
             import ctypes
             HWND = ctypes.windll.user32.GetForegroundWindow()
-            ctypes.windll.user32.PostMessageW(HWND, 0x0501, 0, 0)  # WM_IME_SETCONTEXT
+            ctypes.windll.user32.PostMessageW(HWND, 0x0501, 0, 0)
         except Exception:
             pass
+
 
 
 
@@ -42,12 +45,18 @@ class HelpPage(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        # Enable touch + IME for Windows touch keyboard
+        self.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
+        self.setAttribute(QtCore.Qt.WA_AcceptTouchEvents, True)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+
         # -----------------------------
         # Internal state
         # -----------------------------
         self.current_column = 0
         self._help_matches = []
         self._help_match_index = -1
+
 
         # -----------------------------
         # Root layout
