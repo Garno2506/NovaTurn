@@ -3,6 +3,32 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from app.help_text import HELP_COL1, HELP_COL2, HELP_COL3
 
 
+# ---------------------------------------------------------
+# Custom QLineEdit (OSK-friendly)
+# ---------------------------------------------------------
+class OSKLineEdit(QtWidgets.QLineEdit):
+    enterPressed = QtCore.pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(32)
+
+    def keyPressEvent(self, event):
+        if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
+            self.enterPressed.emit()
+        super().keyPressEvent(event)
+
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        QtCore.QTimer.singleShot(0, self._open_osk)
+
+    def _open_osk(self):
+        try:
+            QtCore.QProcess.startDetached("osk.exe")
+        except Exception:
+            pass
+
+
 class HelpPage(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -50,10 +76,9 @@ class HelpPage(QtWidgets.QWidget):
         self.help_clear_btn.setFixedHeight(32)
         search_controls.addWidget(self.help_clear_btn)
 
-        # Search bar (QLineEdit) expands
-        self.help_search = QtWidgets.QLineEdit()
+        # OSK-friendly search bar
+        self.help_search = OSKLineEdit()
         self.help_search.setPlaceholderText("Search help text… (Enter = next match)")
-        self.help_search.setFixedHeight(32)
         search_controls.addWidget(self.help_search, 1)
 
         help_layout.addLayout(search_controls)
@@ -93,8 +118,8 @@ class HelpPage(QtWidgets.QWidget):
         # -----------------------------
         # Signals
         # -----------------------------
-        self.help_search.textChanged.connect(self._help_search_update)
-        self.help_search.returnPressed.connect(self._help_search_next)
+        self.help_search.textChanged.connect(self._run_search)
+        self.help_search.enterPressed.connect(self._next_match)
         self.help_clear_btn.clicked.connect(self._clear_search)
 
         self.rb_col1.toggled.connect(lambda checked: checked and self._switch_column(0))
@@ -105,9 +130,9 @@ class HelpPage(QtWidgets.QWidget):
     # Column factory
     # ---------------------------------------------------------
     def _make_column(self):
-        box = QtWidgets.QTextEdit()
-        box.setReadOnly(True)
-        box.setFixedHeight(300)  # roughly half-height; tweak if needed
+        box = QtWidgets.QTextBrowser()
+        box.setOpenExternalLinks(True)
+        box.setFixedHeight(300)
         box.setStyleSheet(
             "font-size: 16px; color: #E0E0E0; background-color: #1E1E1E;"
         )
@@ -120,69 +145,40 @@ class HelpPage(QtWidgets.QWidget):
     def _switch_column(self, index):
         self.current_column = index
         self._scroll_all_to_top()
-        # Re-run search on the newly active column
-        self._help_search_update(self.help_search.text())
+        self._run_search()
         self.help_search.setFocus()
 
-    # ============================================================
-    # HELP PAGE SEARCH + HIGHLIGHT ENGINE
-    # ============================================================
-    def _help_get_active_editor(self):
-        if self.rb_col1.isChecked():
-            return self.help_col1
-        if self.rb_col2.isChecked():
-            return self.help_col2
-        return self.help_col3
+    # ---------------------------------------------------------
+    # Search engine (stable doc.find version)
+    # ---------------------------------------------------------
+    def _run_search(self):
+        text = self.help_search.text().strip()
+        self._clear_highlights()
 
-    def _help_search_update(self, text: str):
-        editor = self._help_get_active_editor()
-
-        # Clear previous highlights
-        cursor = editor.textCursor()
-        cursor.beginEditBlock()
-        fmt = QtGui.QTextCharFormat()
-        fmt.setBackground(QtCore.Qt.transparent)
-        cursor.select(QtGui.QTextCursor.Document)
-        cursor.setCharFormat(fmt)
-        cursor.endEditBlock()
-
-        self._help_matches = []
-        self._help_match_index = -1
-
-        text = text.strip()
         if not text:
+            self._help_matches = []
+            self._help_match_index = -1
             self.help_match_label.setText("0 matches")
             self.help_position_label.setText("")
             return
 
-        # Full-word search (case-insensitive)
-        doc_text = editor.toPlainText()
-        highlight_fmt = QtGui.QTextCharFormat()
-        highlight_fmt.setBackground(QtGui.QColor("#1DB954"))
-        highlight_fmt.setForeground(QtGui.QColor("black"))
+        column = self._get_current_column()
+        doc = column.document()
 
-        cursor = editor.textCursor()
-        pattern = r"\b" + text + r"\b"
-        regex = QtCore.QRegExp(pattern, QtCore.Qt.CaseInsensitive)
+        cursor = QtGui.QTextCursor(doc)
+        highlight_format = QtGui.QTextCharFormat()
+        highlight_format.setBackground(QtGui.QColor("#1DB954"))
+        highlight_format.setForeground(QtGui.QColor("black"))
 
-        pos = 0
+        self._help_matches = []
+
         while True:
-            pos = regex.indexIn(doc_text, pos)
-            if pos == -1:
+            cursor = doc.find(text, cursor)
+            if cursor.isNull():
                 break
+            self._help_matches.append(cursor.selectionStart())
+            cursor.mergeCharFormat(highlight_format)
 
-            cursor.setPosition(pos)
-            cursor.movePosition(
-                QtGui.QTextCursor.Right,
-                QtGui.QTextCursor.KeepAnchor,
-                len(text),
-            )
-            cursor.mergeCharFormat(highlight_fmt)
-
-            self._help_matches.append(pos)
-            pos += len(text)
-
-        # Update match counter
         count = len(self._help_matches)
         if count == 0:
             self.help_match_label.setText("No matches found")
@@ -191,45 +187,38 @@ class HelpPage(QtWidgets.QWidget):
         else:
             self.help_match_label.setText(f"{count} matches found")
 
-        # Jump to first match
         if self._help_matches:
             self._help_match_index = 0
-            self._help_jump_to_match()
+            self._jump_to_match(0)
         else:
             self._help_match_index = -1
             self.help_position_label.setText("")
 
-    def _help_jump_to_match(self):
+    # ---------------------------------------------------------
+    # Jump to next match
+    # ---------------------------------------------------------
+    def _next_match(self):
         if not self._help_matches:
             return
 
-        editor = self._help_get_active_editor()
-        pos = self._help_matches[self._help_match_index]
+        self._help_match_index = (self._help_match_index + 1) % len(self._help_matches)
+        self._jump_to_match(self._help_match_index)
 
-        cursor = editor.textCursor()
-        cursor.setPosition(pos)
-        cursor.movePosition(
-            QtGui.QTextCursor.Right,
-            QtGui.QTextCursor.KeepAnchor,
-            len(self.help_search.text().strip()),
-        )
-        editor.setTextCursor(cursor)
-        editor.ensureCursorVisible()
+    # ---------------------------------------------------------
+    # Jump helper
+    # ---------------------------------------------------------
+    def _jump_to_match(self, index):
+        column = self._get_current_column()
+        doc = column.document()
 
-        # Update "Match X of Y"
-        pos_idx = self._help_match_index + 1
+        cursor = QtGui.QTextCursor(doc)
+        cursor.setPosition(self._help_matches[index])
+        column.setTextCursor(cursor)
+        column.ensureCursorVisible()
+
+        pos_idx = index + 1
         total = len(self._help_matches)
         self.help_position_label.setText(f"Match {pos_idx} of {total}")
-
-    def _help_search_next(self):
-        if not self._help_matches:
-            return
-
-        self._help_match_index += 1
-        if self._help_match_index >= len(self._help_matches):
-            self._help_match_index = 0
-
-        self._help_jump_to_match()
 
     # ---------------------------------------------------------
     # Clear search
@@ -251,22 +240,16 @@ class HelpPage(QtWidgets.QWidget):
         for col in (self.help_col1, self.help_col2, self.help_col3):
             doc = col.document()
             cursor = QtGui.QTextCursor(doc)
-
-        # Remove background formatting
             cursor.beginEditBlock()
             fmt = QtGui.QTextCharFormat()
             fmt.setBackground(QtCore.Qt.transparent)
             cursor.select(QtGui.QTextCursor.Document)
             cursor.setCharFormat(fmt)
             cursor.endEditBlock()
-
-        # IMPORTANT: clear the active selection (white highlight)
             cursor.clearSelection()
             col.setTextCursor(cursor)
 
-
     def reset_page(self):
-        """Clear everything when leaving the Help page."""
         self.help_search.clear()
         self._clear_highlights()
         self._scroll_all_to_top()
@@ -274,9 +257,6 @@ class HelpPage(QtWidgets.QWidget):
         self._help_match_index = -1
         self.help_match_label.setText("0 matches")
         self.help_position_label.setText("")
-
-
-
 
     # ---------------------------------------------------------
     # Utility
@@ -288,3 +268,4 @@ class HelpPage(QtWidgets.QWidget):
         self.help_col1.verticalScrollBar().setValue(0)
         self.help_col2.verticalScrollBar().setValue(0)
         self.help_col3.verticalScrollBar().setValue(0)
+
