@@ -18,40 +18,33 @@ class OSKLineEdit(QtWidgets.QLineEdit):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
     # ---------------------------------------------------------
-    # TOUCH-ONLY OSK TRIGGER
+    # EXTERNAL USB TOUCHSCREEN FIX:
+    # Touch arrives as a mouse press → open OSK here
     # ---------------------------------------------------------
-    def event(self, e):
-        if e.type() == QtCore.QEvent.TouchBegin:
-            QtCore.QTimer.singleShot(0, self._open_osk)
-        return super().event(e)
+    def mousePressEvent(self, event):
+        QtCore.QTimer.singleShot(0, self._open_osk)
+        super().mousePressEvent(event)
 
     def focusInEvent(self, event):
-        # Do NOT open OSK on mouse click
+        # Do NOT open OSK on focus alone
         super().focusInEvent(event)
 
     # ---------------------------------------------------------
     # GUARANTEED WINDOWS OSK (TextInputPanel COM API)
     # ---------------------------------------------------------
     def _open_osk(self):
+        # Try COM API first
         try:
             import comtypes.client
-            import ctypes
-
-            # Create TextInputPanel COM object
             tip = comtypes.client.CreateObject("TextInputPanel.TextInputPanel")
-
-            # Attach OSK to this widget's window
             hwnd = int(self.window().winId())
             tip.AttachedEditWindow = hwnd
-
-            # Show the OSK
             tip.Show()
             return
-
         except Exception:
             pass
 
-        # Fallback: launch TabTip.exe
+        # Fallback: TabTip.exe
         try:
             QtCore.QProcess.startDetached(
                 r"C:\Program Files\Common Files\Microsoft Shared\ink\TabTip.exe"
@@ -84,7 +77,6 @@ class HelpPage(QtWidgets.QWidget):
         self._help_matches = []
         self._help_match_index = -1
 
-
         # -----------------------------
         # Root layout
         # -----------------------------
@@ -97,7 +89,19 @@ class HelpPage(QtWidgets.QWidget):
         help_layout.addWidget(help_title)
 
         # -----------------------------
-        # Search controls row (radios + clear)
+        # Search bar row
+        # -----------------------------
+        search_bar_row = QtWidgets.QHBoxLayout()
+        search_bar_row.setSpacing(20)
+
+        self.help_search = OSKLineEdit()
+        self.help_search.setPlaceholderText("Search help text… (Enter = next match)")
+        search_bar_row.addWidget(self.help_search)
+
+        help_layout.addLayout(search_bar_row)
+
+        # -----------------------------
+        # Search controls row
         # -----------------------------
         search_controls = QtWidgets.QHBoxLayout()
         search_controls.setSpacing(20)
@@ -106,6 +110,11 @@ class HelpPage(QtWidgets.QWidget):
         self.rb_col2 = QtWidgets.QRadioButton("Search Column 2")
         self.rb_col3 = QtWidgets.QRadioButton("Search Column 3")
         self.rb_col1.setChecked(True)
+
+        # Prevent radio buttons from stealing focus
+        self.rb_col1.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.rb_col2.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.rb_col3.setFocusPolicy(QtCore.Qt.NoFocus)
 
         rb_style = "color: white; font-size: 12px;"
         self.rb_col1.setStyleSheet(rb_style)
@@ -116,26 +125,11 @@ class HelpPage(QtWidgets.QWidget):
         search_controls.addWidget(self.rb_col2)
         search_controls.addWidget(self.rb_col3)
 
-        # Clear button
         self.help_clear_btn = QtWidgets.QPushButton("Clear")
         self.help_clear_btn.setFixedHeight(32)
         search_controls.addWidget(self.help_clear_btn)
 
-        # Add the controls row to the layout
         help_layout.addLayout(search_controls)
-
-        # -----------------------------
-        # Search bar row (search bar alone)
-        # -----------------------------
-        search_bar_row = QtWidgets.QHBoxLayout()
-        search_bar_row.setSpacing(20)
-
-        self.help_search = OSKLineEdit()
-        self.help_search.setPlaceholderText("Search help text… (Enter = next match)")
-        search_bar_row.addWidget(self.help_search)
-
-        # Add the search bar row to the layout
-        help_layout.addLayout(search_bar_row)
 
         # -----------------------------
         # Match labels
@@ -203,7 +197,7 @@ class HelpPage(QtWidgets.QWidget):
         self.help_search.setFocus()
 
     # ---------------------------------------------------------
-    # Search engine (stable doc.find version)
+    # Search engine
     # ---------------------------------------------------------
     def _run_search(self):
         text = self.help_search.text().strip()
