@@ -24,9 +24,18 @@ class OSKLineEdit(QtWidgets.QLineEdit):
 
     def _open_osk(self):
         try:
-            QtCore.QProcess.startDetached("osk.exe")
+        # Launch TabTip (Windows touch keyboard)
+            QtCore.QProcess.startDetached(
+                r"C:\\Program Files\\Common Files\\Microsoft Shared\\ink\\TabTip.exe"
+            )
+
+        # COM automation nudge (forces keyboard to appear)
+            import ctypes
+            HWND = ctypes.windll.user32.GetForegroundWindow()
+            ctypes.windll.user32.PostMessageW(HWND, 0x0501, 0, 0)  # WM_IME_SETCONTEXT
         except Exception:
             pass
+
 
 
 class HelpPage(QtWidgets.QWidget):
