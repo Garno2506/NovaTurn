@@ -4,15 +4,6 @@ from app.help_text import HELP_COL1, HELP_COL2, HELP_COL3
 import os
 import sys
 
-def resource_path(relative_path):
-    """Safe resource loader for dev + PyInstaller."""
-    if hasattr(sys, '_MEIPASS'):
-        base_path = sys._MEIPASS
-    else:
-        base_path = os.path.abspath(os.path.dirname(__file__))
-    return os.path.join(base_path, relative_path)
-
-
 # ---------------------------------------------------------
 # Premium Draggable On‑Screen Keyboard for Help Page
 # ---------------------------------------------------------
@@ -245,39 +236,6 @@ class HelpPage(QtWidgets.QWidget):
 
         main_layout.addLayout(columns)
 
-        # ---------------------------------------------------------
-        # Banner under the middle column (final version)
-        # Centered, no stretch, transparent PNG, adjustable opacity
-        # ---------------------------------------------------------
-        banner_row = QtWidgets.QHBoxLayout()
-        banner_row.setContentsMargins(0, 10, 0, 0)
-
-        self.help_banner = QtWidgets.QLabel()
-        self.help_banner.setAlignment(QtCore.Qt.AlignCenter)
-
-        # Keep aspect ratio — do NOT stretch
-        self.help_banner.setScaledContents(False)
-
-        # Perfect size for cropped transparent banner
-        self.help_banner.setMaximumWidth(380)
-        self.help_banner.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
-                                       QtWidgets.QSizePolicy.Fixed)
-
-        # Opacity effect (adjust anytime)
-        self.banner_opacity = QtWidgets.QGraphicsOpacityEffect()
-        self.banner_opacity.setOpacity(0.85)   # ← adjust here
-        self.help_banner.setGraphicsEffect(self.banner_opacity)
-
-        banner_row.addStretch()
-        banner_row.addWidget(self.help_banner)
-        banner_row.addStretch()
-
-        main_layout.addLayout(banner_row)
-
-        # Load banner AFTER widget is built
-        QtCore.QTimer.singleShot(0, self._load_banner)
-
-
 
         main_layout.addStretch()
 
@@ -293,16 +251,6 @@ class HelpPage(QtWidgets.QWidget):
         self.help_osk.hide()
         self.help_osk.keyPressed.connect(self._handle_osk_key)
 
-
-
-    # ---------------------------------------------------------
-    # ⭐ Delayed banner loader (fixes NULL pixmap)
-    # ---------------------------------------------------------
-    def _load_banner(self):
-        path = resource_path("banners/NovaTurn_Help.png")
-        banner_pix = QtGui.QPixmap(path)
-        self.help_banner.setPixmap(banner_pix)
-        self.help_banner.setScaledContents(True)
 
     # ---------------------------------------------------------
     # Column factory
@@ -496,10 +444,16 @@ class HelpPage(QtWidgets.QWidget):
             parent_rect = self.rect()
             osk_width = self.help_osk.width()
             osk_height = self.help_osk.height()
-            x = (parent_rect.width() - osk_width) // 2
-            y = parent_rect.height() - osk_height - 20
-            self.help_osk.move(self.mapToGlobal(QtCore.QPoint(x, y)))
 
+            # ---------------------------------------------------------
+            # ⭐ Apply your requested offsets:
+            #    - Move left by 2 inches  (≈192 px)
+            #    - Move up by 1 inch      (≈96 px)
+            # ---------------------------------------------------------
+            x = (parent_rect.width() - osk_width) // 2 - 128
+            y = parent_rect.height() - osk_height - 20 - 96
+
+            self.help_osk.move(self.mapToGlobal(QtCore.QPoint(x, y)))
             self.help_osk.show()
             self.help_osk.raise_()
 
@@ -514,6 +468,26 @@ class HelpPage(QtWidgets.QWidget):
                     background-color: #333;
                 }
             """)
+
+    # ---------------------------------------------------------
+    # Keep OSK positioned on window resize
+    # ---------------------------------------------------------
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if self.help_osk.isVisible():
+            parent_rect = self.rect()
+            osk_width = self.help_osk.width()
+            osk_height = self.help_osk.height()
+
+            # Same offsets as above
+            x = (parent_rect.width() - osk_width) // 2 - 128
+            y = parent_rect.height() - osk_height - 20 - 96
+
+            self.help_osk.move(self.mapToGlobal(QtCore.QPoint(x, y)))
+
+
+
+
 
     # ---------------------------------------------------------
     # Handle OSK key input

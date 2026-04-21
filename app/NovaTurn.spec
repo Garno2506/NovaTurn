@@ -32,10 +32,9 @@ a = Analysis(
         # VLC folder (DLLs + plugins)
         (vlc_path, 'vlc'),
 
-        # OSK PNG + splash screen + all banners (includes NovaTurn_Help.png)
+        # OSK PNG + splash screen + any future banners
         (banners_path, 'banners'),
     ],
-
 
     hiddenimports=[
         'comtypes',
