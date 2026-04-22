@@ -392,24 +392,19 @@ class HelpPage(QtWidgets.QWidget):
     # Highlight clearing
     # ---------------------------------------------------------
     def _clear_highlights(self):
+    # Reload original HTML for each column
+        self.help_col1.setHtml(HELP_COL1)
+        self.help_col2.setHtml(HELP_COL2)
+        self.help_col3.setHtml(HELP_COL3)
+
+    # Reset cursor and scroll
         for col in (self.help_col1, self.help_col2, self.help_col3):
-            doc = col.document()
-            cursor = QtGui.QTextCursor(doc)
-
-            cursor.beginEditBlock()
-
-            fmt = QtGui.QTextCharFormat()
-            fmt.setBackground(QtCore.Qt.transparent)
-
-            cursor.select(QtGui.QTextCursor.Document)
-            cursor.setCharFormat(fmt)
-
-            cursor.endEditBlock()
-
+            cursor = col.textCursor()
             cursor.setPosition(0)
             col.setTextCursor(cursor)
-
             col.verticalScrollBar().setValue(0)
+
+
 
     def reset_page(self):
         self.help_search.clear()
@@ -535,6 +530,5 @@ class HelpPage(QtWidgets.QWidget):
             x = (parent_rect.width() - osk_width) // 2
             y = parent_rect.height() - osk_height - 20
             self.help_osk.move(self.mapToGlobal(QtCore.QPoint(x, y)))
-
 
 
