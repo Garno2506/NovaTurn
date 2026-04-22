@@ -1064,8 +1064,9 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
     def open_graphic_equalizer(self):
         from app.graphic_equalizer import GraphicEqualizer
         self.eq_window = GraphicEqualizer()
-        # Optional: self.eq_window.set_vlc_player(self.player)
+        self.eq_window.set_vlc_player(self.player)   # <-- IMPORTANT
         self.eq_window.show()
+
 
     def _connect_signals(self):
         """Connects all UI signals."""
