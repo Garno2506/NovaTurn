@@ -187,7 +187,7 @@ class HelpPage(QtWidgets.QWidget):
         button_row.setContentsMargins(0, 0, 0, 0)
         button_row.setSpacing(6)
 
-        self.osk_button = QtWidgets.QPushButton("Open Keyboard")
+        self.osk_button = QtWidgets.QPushButton("Open Keyboard OSK")
         self.osk_button.setFixedHeight(36)
         self.osk_button.clicked.connect(self._toggle_osk)
 
