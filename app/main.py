@@ -95,7 +95,6 @@ from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import QTimer, QPropertyAnimation, QEasingCurve, QPoint
 from app.ui.osk_final import MiniKeyboard
 
-
 # ------------------------------------------------------------
 # Pill-style delegate for "All Artists"
 # ------------------------------------------------------------
@@ -1013,14 +1012,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.stacked.addWidget(self.page_help)
         self.HELP_PAGE_INDEX = self.stacked.indexOf(self.page_help)
 
-
-
-
-
-
-
-
-
     # ============================================================
     #         MENU + SIGNAL CONNECTIONS (UPDATED + FIXED)
     # ============================================================
@@ -1037,6 +1028,11 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         act_delete_all = self.library_menu.addAction("Delete ALL Media")
         act_undo_delete = self.library_menu.addAction("Undo Last Delete")
         act_open_trash = self.library_menu.addAction("Open Trash Bin")
+
+        # ------------------------------------------------------------
+        # NEW: Graphic Equalizer
+        # ------------------------------------------------------------
+        act_graphic_eq = self.library_menu.addAction("Graphic Equalizer")
         self.library_menu.addSeparator()
 
         act_export = self.library_menu.addAction("Export Library to CSV")
@@ -1053,11 +1049,22 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.act_delete_all = act_delete_all
         self.act_undo_delete = act_undo_delete
         self.act_open_trash = act_open_trash
+        self.act_graphic_eq = act_graphic_eq
         self.act_export = act_export
         self.act_import = act_import
         self.act_edit_metadata = act_edit_metadata
         self.act_change_password = act_change_password
 
+        # ------------------------------------------------------------
+        # CONNECT SIGNALS
+        # ------------------------------------------------------------
+        self.act_graphic_eq.triggered.connect(self.open_graphic_equalizer)
+
+
+    def open_graphic_equalizer(self):
+        from app.graphic_equalizer import GraphicEqualizer
+        self.eq_window = GraphicEqualizer()
+        self.eq_window.show()
 
 
 
