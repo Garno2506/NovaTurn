@@ -20,7 +20,6 @@ class EqCurveWidget(QtWidgets.QWidget):
         self._ready = False
         self.setMinimumHeight(140)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-
         QtCore.QTimer.singleShot(0, self._enable_painting)
 
     def _enable_painting(self):
@@ -108,10 +107,11 @@ class EqCurveWidget(QtWidgets.QWidget):
 
 
 class GraphicEqualizer(QtWidgets.QWidget):
-    """NovaTurn 10-band EQ with premium black/green styling."""
+    """NovaTurn 10-band EQ with VLC shaping and state persistence."""
 
     def __init__(self):
         super().__init__()
+        self.setWindowFlags(QtCore.Qt.Window)   # <-- FIXES AUTO-CLOSE
         self.setWindowTitle("NovaTurn Graphic Equalizer")
         self.setMinimumSize(980, 520)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
@@ -122,6 +122,7 @@ class GraphicEqualizer(QtWidgets.QWidget):
         self.sliders = []
         self._slider_timers = {}
         self.vlc_player = None
+        self.vlc_eq = None
 
         # Presets
         self.built_in_presets = {
@@ -132,19 +133,27 @@ class GraphicEqualizer(QtWidgets.QWidget):
             "Vocal Boost": [-2, -1, 1, 3, 4, 4, 3, 1, -1, -2],
         }
         self.user_presets = {}
-        self.presets_file = os.path.join(os.path.dirname(__file__), "eq_presets.json")
+        base_dir = os.path.dirname(__file__)
+        self.presets_file = os.path.join(base_dir, "eq_presets.json")
+        self.state_file = os.path.join(base_dir, "eq_state.json")
 
-        self._ab_active = False
+        # A/B
         self._ab_stored_gains = [0] * 10
+
+        # Options
+        self.auto_gain_enabled = False
+        self.limiter_enabled = True
+        self.boost_amount = 3  # dB
 
         self._build_ui()
         self._load_user_presets()
+        self._load_state()
         self._update_curve()
         self._apply_to_vlc()
         self._fade_in()
 
     # ------------------------------
-    # VLC Integration (optional)
+    # VLC Integration
     # ------------------------------
     def set_vlc_player(self, player):
         """Attach VLC player and create a VLC equalizer instance."""
@@ -152,11 +161,67 @@ class GraphicEqualizer(QtWidgets.QWidget):
 
         try:
             import vlc
-            self.vlc_eq = vlc.AudioEqualizer()   # Create VLC EQ object
+            self.vlc_eq = vlc.AudioEqualizer()
         except Exception:
             self.vlc_eq = None
+            return
 
+        # Do NOT apply EQ here — VLC may not be ready yet
+        # We wait until playback is active
+        # _apply_to_vlc() will handle it safely
         self._apply_to_vlc()
+
+    def _apply_to_vlc(self):
+        """Apply slider gains (with auto-gain/limiter) to VLC equalizer."""
+        if self.vlc_player is None:
+            return
+        if self.vlc_eq is None:
+            return
+
+        # Only apply EQ if VLC is actually playing audio
+        try:
+            is_playing = bool(self.vlc_player.is_playing())
+        except Exception:
+            is_playing = False
+
+        if not is_playing:
+            # VLC is not ready — skip applying EQ for now
+            return
+
+        gains = self._get_gains()
+
+        # Limiter: clamp to [-12, 12]
+        if self.limiter_enabled:
+            gains = [max(-12, min(12, g)) for g in gains]
+
+        # Auto-gain: keep overall level reasonable
+        if self.auto_gain_enabled:
+            max_gain = max(gains)
+            if max_gain > 0:
+                offset = max_gain / 2.0
+                gains = [g - offset for g in gains]
+
+        # Apply to VLC
+        for i, g in enumerate(gains):
+            try:
+                self.vlc_eq.set_amp_at_index(float(g), i)
+            except Exception:
+                pass
+
+        try:
+            self.vlc_player.set_equalizer(self.vlc_eq)
+        except Exception:
+            return
+
+        # Safety: if VLC stopped after applying EQ, restart it
+        try:
+            if not self.vlc_player.is_playing():
+                self.vlc_player.play()
+        except Exception:
+            pass
+
+
+
 
     # ------------------------------
     # UI BUILD
@@ -218,7 +283,7 @@ class GraphicEqualizer(QtWidgets.QWidget):
 
         # Right panel
         right = QtWidgets.QVBoxLayout()
-        right.setSpacing(12)
+        right.setSpacing(10)
 
         # dB scale
         for text in ["+12 dB", "0 dB", "-12 dB"]:
@@ -227,7 +292,7 @@ class GraphicEqualizer(QtWidgets.QWidget):
             lbl.setStyleSheet(f"color: {TEXT_SUBTLE}; font-size: 13px;")
             right.addWidget(lbl)
 
-        right.addSpacing(10)
+        right.addSpacing(6)
 
         # Presets
         preset_box = QtWidgets.QGroupBox("Presets")
@@ -270,6 +335,27 @@ class GraphicEqualizer(QtWidgets.QWidget):
         preset_layout.addWidget(btn_delete)
 
         right.addWidget(preset_box)
+
+        # Options row: Auto-gain, Limiter, Boost
+        options_row = QtWidgets.QHBoxLayout()
+
+        self.chk_auto_gain = QtWidgets.QCheckBox("Auto-gain")
+        self.chk_auto_gain.setStyleSheet(f"color: {TEXT_SUBTLE};")
+        self.chk_auto_gain.toggled.connect(self._on_auto_gain_toggled)
+        options_row.addWidget(self.chk_auto_gain)
+
+        self.chk_limiter = QtWidgets.QCheckBox("Limiter")
+        self.chk_limiter.setChecked(True)
+        self.chk_limiter.setStyleSheet(f"color: {TEXT_SUBTLE};")
+        self.chk_limiter.toggled.connect(self._on_limiter_toggled)
+        options_row.addWidget(self.chk_limiter)
+
+        btn_boost = QtWidgets.QPushButton(f"Boost +{self.boost_amount} dB")
+        btn_boost.setStyleSheet(self._button_style())
+        btn_boost.clicked.connect(self._on_boost_clicked)
+        options_row.addWidget(btn_boost)
+
+        right.addLayout(options_row)
 
         # A/B
         self.ab_button = QtWidgets.QPushButton("A/B: Bypass OFF")
@@ -362,8 +448,8 @@ class GraphicEqualizer(QtWidgets.QWidget):
     def _set_gains(self, gains):
         for s, g in zip(self.sliders, gains):
             s.blockSignals(True)
-            s.setValue(g)
-            s.setToolTip(f"{g:+d} dB")
+            s.setValue(int(g))
+            s.setToolTip(f"{int(g):+d} dB")
             s.blockSignals(False)
         self._update_curve()
         self._apply_to_vlc()
@@ -463,7 +549,10 @@ class GraphicEqualizer(QtWidgets.QWidget):
             with open(self.presets_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
             if isinstance(data, dict):
-                self.user_presets = {k: v for k, v in data.items() if isinstance(v, list) and len(v) == 10}
+                self.user_presets = {
+                    k: v for k, v in data.items()
+                    if isinstance(v, list) and len(v) == 10
+                }
         except Exception:
             self.user_presets = {}
         self._refresh_preset_combo()
@@ -476,6 +565,24 @@ class GraphicEqualizer(QtWidgets.QWidget):
             pass
 
     # ------------------------------
+    # Options: Auto-gain, Limiter, Boost
+    # ------------------------------
+    def _on_auto_gain_toggled(self, checked):
+        self.auto_gain_enabled = checked
+        self._apply_to_vlc()
+        self._save_state()
+
+    def _on_limiter_toggled(self, checked):
+        self.limiter_enabled = checked
+        self._apply_to_vlc()
+        self._save_state()
+
+    def _on_boost_clicked(self):
+        gains = [max(-12, min(12, g + self.boost_amount)) for g in self._get_gains()]
+        self._set_gains(gains)
+        self._save_state()
+
+    # ------------------------------
     # A/B
     # ------------------------------
     def _toggle_ab(self, checked):
@@ -486,30 +593,60 @@ class GraphicEqualizer(QtWidgets.QWidget):
         else:
             self._set_gains(self._ab_stored_gains)
             self.ab_button.setText("A/B: Bypass OFF")
+        self._save_state()
 
     # ------------------------------
-    # VLC Hook
+    # State Persistence
     # ------------------------------
-    def _apply_to_vlc(self):
-        """Apply slider gains to VLC equalizer."""
-        if self.vlc_player is None:
+    def _load_state(self):
+        if not os.path.exists(self.state_file):
             return
-        if not hasattr(self, "vlc_eq") or self.vlc_eq is None:
-            return
-
-        gains = self._get_gains()
-
-        # VLC expects floats in dB
-        for i, g in enumerate(gains):
-            try:
-                self.vlc_eq.set_amp_at_index(float(g), i)
-            except Exception:
-                pass
-
         try:
-            self.vlc_player.set_equalizer(self.vlc_eq)
+            with open(self.state_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            return
+
+        gains = data.get("gains")
+        if isinstance(gains, list) and len(gains) == len(self.sliders):
+            self._set_gains(gains)
+
+        self.auto_gain_enabled = bool(data.get("auto_gain", False))
+        self.limiter_enabled = bool(data.get("limiter", True))
+
+        self.chk_auto_gain.blockSignals(True)
+        self.chk_auto_gain.setChecked(self.auto_gain_enabled)
+        self.chk_auto_gain.blockSignals(False)
+
+        self.chk_limiter.blockSignals(True)
+        self.chk_limiter.setChecked(self.limiter_enabled)
+        self.chk_limiter.blockSignals(False)
+
+    def _save_state(self):
+        data = {
+            "gains": self._get_gains(),
+            "auto_gain": self.auto_gain_enabled,
+            "limiter": self.limiter_enabled,
+        }
+        try:
+            with open(self.state_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
         except Exception:
             pass
+
+    def closeEvent(self, event):
+        try:
+            self.player.stop()
+        except Exception:
+            pass
+
+        try:
+            if hasattr(self, "eq_window") and self.eq_window is not None:
+                self.eq_window.close()
+        except Exception:
+            pass
+
+        super().closeEvent(event)
 
 
     # ------------------------------
@@ -524,7 +661,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
         anim.setDuration(220)
         anim.setStartValue(0.0)
         anim.setEndValue(1.0)
-
         anim.setEasingCurve(QtCore.QEasingCurve.InOutQuad)
         anim.start()
 
@@ -535,4 +671,5 @@ if __name__ == "__main__":
     w = GraphicEqualizer()
     w.show()
     sys.exit(app.exec_())
+
 
