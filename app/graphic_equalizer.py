@@ -350,6 +350,16 @@ class GraphicEqualizer(QtWidgets.QWidget):
         self.chk_limiter.toggled.connect(self._on_limiter_toggled)
         options_row.addWidget(self.chk_limiter)
 
+
+        btn_boost_minus = QtWidgets.QPushButton(f"Boost -{self.boost_amount} dB")
+        btn_boost_minus.setStyleSheet(self._button_style())
+        btn_boost_minus.clicked.connect(self._on_boost_minus_clicked)
+        options_row.addWidget(btn_boost_minus)
+
+
+
+
+
         btn_boost = QtWidgets.QPushButton(f"Boost +{self.boost_amount} dB")
         btn_boost.setStyleSheet(self._button_style())
         btn_boost.clicked.connect(self._on_boost_clicked)
@@ -383,19 +393,22 @@ class GraphicEqualizer(QtWidgets.QWidget):
         return f"""
         QSlider::groove:vertical {{
             background: #333333;
-            width: 6px;
-            border-radius: 3px;
+            width: 4px;              /* thinner groove */
+            border-radius: 2px;
         }}
         QSlider::handle:vertical {{
             background: {color};
-            height: 18px;
-            margin: -4px;
+            border: 1px solid #0F7A3A;
+            width: 12px;             /* thinner handle (was 22px) */
+            height: 22px;
+            margin: -6px;
             border-radius: 4px;
         }}
         QSlider::sub-page:vertical {{
             background: {ACCENT};
         }}
         """
+
 
     def _button_style(self):
         return f"""
@@ -581,6 +594,13 @@ class GraphicEqualizer(QtWidgets.QWidget):
         gains = [max(-12, min(12, g + self.boost_amount)) for g in self._get_gains()]
         self._set_gains(gains)
         self._save_state()
+
+
+    def _on_boost_minus_clicked(self):
+        gains = [max(-12, min(12, g - self.boost_amount)) for g in self._get_gains()]
+        self._set_gains(gains)
+        self._save_state()
+
 
     # ------------------------------
     # A/B
