@@ -106,12 +106,56 @@ class EqCurveWidget(QtWidgets.QWidget):
         painter.drawPath(path)
 
 
+class LedMeter(QtWidgets.QWidget):
+    """Small vertical LED meter that reacts to slider gain."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.level = 0.0  # 0.0 to 1.0
+        self.setMinimumWidth(8)
+        self.setMaximumWidth(8)
+        self.setMinimumHeight(80)
+
+    def set_level(self, value: float):
+        self.level = max(0.0, min(1.0, float(value)))
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+
+        rect = self.rect()
+        h = rect.height()
+
+        # Background
+        painter.fillRect(rect, QtGui.QColor("#202020"))
+
+        # LED height
+        led_height = int(h * self.level)
+        if led_height <= 0:
+            return
+
+        # Colour based on level
+        if self.level < 0.33:
+            color = QtGui.QColor("#1DB954")  # green
+        elif self.level < 0.66:
+            color = QtGui.QColor("#E6C229")  # yellow
+        else:
+            color = QtGui.QColor("#FF3B30")  # red
+
+        led_rect = QtCore.QRect(rect.left(), rect.bottom() - led_height, rect.width(), led_height)
+        painter.fillRect(led_rect, color)
+
+
 class GraphicEqualizer(QtWidgets.QWidget):
     """NovaTurn 10-band EQ with VLC shaping and state persistence."""
 
     def __init__(self):
         super().__init__()
         self.setWindowFlags(QtCore.Qt.Window)   # <-- FIXES AUTO-CLOSE
+
+        self.led_meters = []   # LED bars for each slider
+
         self.setWindowTitle("NovaTurn Graphic Equalizer")
         self.setMinimumSize(980, 520)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
@@ -150,6 +194,12 @@ class GraphicEqualizer(QtWidgets.QWidget):
         self._load_state()
         self._update_curve()
         self._apply_to_vlc()
+
+        # LED animation timer
+        self.led_timer = QtCore.QTimer(self)
+        self.led_timer.timeout.connect(self._update_leds)
+        self.led_timer.start(40)  # 25 FPS
+
         self._fade_in()
 
     # ------------------------------
@@ -166,9 +216,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
             self.vlc_eq = None
             return
 
-        # Do NOT apply EQ here — VLC may not be ready yet
-        # We wait until playback is active
-        # _apply_to_vlc() will handle it safely
         self._apply_to_vlc()
 
     def _apply_to_vlc(self):
@@ -178,30 +225,25 @@ class GraphicEqualizer(QtWidgets.QWidget):
         if self.vlc_eq is None:
             return
 
-        # Only apply EQ if VLC is actually playing audio
         try:
             is_playing = bool(self.vlc_player.is_playing())
         except Exception:
             is_playing = False
 
         if not is_playing:
-            # VLC is not ready — skip applying EQ for now
             return
 
         gains = self._get_gains()
 
-        # Limiter: clamp to [-12, 12]
         if self.limiter_enabled:
             gains = [max(-12, min(12, g)) for g in gains]
 
-        # Auto-gain: keep overall level reasonable
         if self.auto_gain_enabled:
             max_gain = max(gains)
             if max_gain > 0:
                 offset = max_gain / 2.0
                 gains = [g - offset for g in gains]
 
-        # Apply to VLC
         for i, g in enumerate(gains):
             try:
                 self.vlc_eq.set_amp_at_index(float(g), i)
@@ -213,15 +255,11 @@ class GraphicEqualizer(QtWidgets.QWidget):
         except Exception:
             return
 
-        # Safety: if VLC stopped after applying EQ, restart it
         try:
             if not self.vlc_player.is_playing():
                 self.vlc_player.play()
         except Exception:
             pass
-
-
-
 
     # ------------------------------
     # UI BUILD
@@ -265,6 +303,9 @@ class GraphicEqualizer(QtWidgets.QWidget):
             label.setStyleSheet(f"color: {TEXT_MAIN}; font-size: 13px;")
             vbox.addWidget(label)
 
+            hbox = QtWidgets.QHBoxLayout()
+            hbox.setSpacing(4)
+
             slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
             slider.setRange(-12, 12)
             slider.setValue(0)
@@ -276,7 +317,13 @@ class GraphicEqualizer(QtWidgets.QWidget):
             slider.setToolTip("0 dB")
 
             self.sliders.append(slider)
-            vbox.addWidget(slider)
+            hbox.addWidget(slider)
+
+            led = LedMeter()
+            self.led_meters.append(led)
+            hbox.addWidget(led)
+
+            vbox.addLayout(hbox)
             sliders_layout.addLayout(vbox)
 
         mid.addLayout(sliders_layout)
@@ -350,15 +397,10 @@ class GraphicEqualizer(QtWidgets.QWidget):
         self.chk_limiter.toggled.connect(self._on_limiter_toggled)
         options_row.addWidget(self.chk_limiter)
 
-
         btn_boost_minus = QtWidgets.QPushButton(f"Boost -{self.boost_amount} dB")
         btn_boost_minus.setStyleSheet(self._button_style())
         btn_boost_minus.clicked.connect(self._on_boost_minus_clicked)
         options_row.addWidget(btn_boost_minus)
-
-
-
-
 
         btn_boost = QtWidgets.QPushButton(f"Boost +{self.boost_amount} dB")
         btn_boost.setStyleSheet(self._button_style())
@@ -393,13 +435,13 @@ class GraphicEqualizer(QtWidgets.QWidget):
         return f"""
         QSlider::groove:vertical {{
             background: #333333;
-            width: 4px;              /* thinner groove */
+            width: 4px;
             border-radius: 2px;
         }}
         QSlider::handle:vertical {{
             background: {color};
             border: 1px solid #0F7A3A;
-            width: 12px;             /* thinner handle (was 22px) */
+            width: 12px;
             height: 22px;
             margin: -6px;
             border-radius: 4px;
@@ -408,7 +450,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
             background: {ACCENT};
         }}
         """
-
 
     def _button_style(self):
         return f"""
@@ -434,7 +475,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
         if slider is None:
             return
 
-        # Snap to 0
         if -1 <= value <= 1 and value != 0:
             slider.blockSignals(True)
             slider.setValue(0)
@@ -443,7 +483,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
 
         slider.setToolTip(f"{value:+d} dB")
 
-        # Glow
         slider.setStyleSheet(self._slider_style(False))
         if slider not in self._slider_timers:
             timer = QtCore.QTimer(self)
@@ -464,11 +503,20 @@ class GraphicEqualizer(QtWidgets.QWidget):
             s.setValue(int(g))
             s.setToolTip(f"{int(g):+d} dB")
             s.blockSignals(False)
+
         self._update_curve()
         self._apply_to_vlc()
 
     def _update_curve(self):
         self.curve_widget.set_gains(self._get_gains())
+
+    def _update_leds(self):
+        gains = self._get_gains()
+
+        for i, g in enumerate(gains):
+            level = (g + 12) / 24.0
+            if i < len(self.led_meters):
+                self.led_meters[i].set_level(level)
 
     # ------------------------------
     # Reset
@@ -487,11 +535,9 @@ class GraphicEqualizer(QtWidgets.QWidget):
         self.preset_combo.blockSignals(True)
         self.preset_combo.clear()
 
-        # Built-in
         for name in sorted(self.built_in_presets.keys()):
             self.preset_combo.addItem(f"★ {name}")
 
-        # User
         if self.user_presets:
             self.preset_combo.insertSeparator(self.preset_combo.count())
             for name in sorted(self.user_presets.keys()):
@@ -595,12 +641,10 @@ class GraphicEqualizer(QtWidgets.QWidget):
         self._set_gains(gains)
         self._save_state()
 
-
     def _on_boost_minus_clicked(self):
         gains = [max(-12, min(12, g - self.boost_amount)) for g in self._get_gains()]
         self._set_gains(gains)
         self._save_state()
-
 
     # ------------------------------
     # A/B
@@ -656,18 +700,11 @@ class GraphicEqualizer(QtWidgets.QWidget):
 
     def closeEvent(self, event):
         try:
-            self.player.stop()
+            if self.vlc_player is not None:
+                self.vlc_player.set_equalizer(None)
         except Exception:
             pass
-
-        try:
-            if hasattr(self, "eq_window") and self.eq_window is not None:
-                self.eq_window.close()
-        except Exception:
-            pass
-
         super().closeEvent(event)
-
 
     # ------------------------------
     # Fade-in Animation
@@ -691,5 +728,6 @@ if __name__ == "__main__":
     w = GraphicEqualizer()
     w.show()
     sys.exit(app.exec_())
+
 
 
