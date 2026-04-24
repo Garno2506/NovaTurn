@@ -165,7 +165,7 @@ class LedMeter(QtWidgets.QWidget):
 
 
 class StereoVuMeter(QtWidgets.QWidget):
-    """Master stereo VU meter with peak hold and glow."""
+    """Master stereo VU meter with peak hold, glow, and label."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -173,7 +173,9 @@ class StereoVuMeter(QtWidgets.QWidget):
         self.right = 0.0
         self.left_peak = 0.0
         self.right_peak = 0.0
-        self.setMinimumHeight(40)
+
+        # Reduced depth
+        self.setMinimumHeight(20)
 
     def set_levels(self, left, right, left_peak, right_peak):
         self.left = left
@@ -192,7 +194,6 @@ class StereoVuMeter(QtWidgets.QWidget):
         # Background
         painter.fillRect(rect, QtGui.QColor("#181818"))
 
-        # Draw one channel
         def draw_channel(x1, x2, level, peak):
             width = x2 - x1
             bar_width = int(width * level)
@@ -217,15 +218,31 @@ class StereoVuMeter(QtWidgets.QWidget):
                 painter.setPen(pen)
                 painter.drawLine(x1 + bar_width, rect.top(), x1 + bar_width, rect.bottom())
 
-            # Peak marker
-            peak_x = x1 + int(width * peak)
-            painter.fillRect(QtCore.QRect(peak_x - 2, rect.top(), 3, rect.height()), QtGui.QColor("#FFFFFF"))
+            # Peak marker (only if visible)
+            if peak > 0.02:
+                peak_x = x1 + int(width * peak)
+                painter.fillRect(QtCore.QRect(peak_x - 2, rect.top(), 3, rect.height()), QtGui.QColor("#FFFFFF"))
 
-        # Left channel
+        # Draw left and right channels
         draw_channel(rect.left(), mid - 4, self.left, self.left_peak)
-
-        # Right channel
         draw_channel(mid + 4, rect.right(), self.right, self.right_peak)
+
+        # --- Only TWO VU labels (bottom-left and bottom-right) ---
+        painter.setPen(QtGui.QColor("#FFFFFF"))
+        painter.setFont(QtGui.QFont("Arial", 10))
+
+        # Left channel VU label
+        painter.drawText(rect.left() + 6, rect.bottom() - 6, "VU")
+
+        # Right channel VU label
+        painter.drawText(mid + 10, rect.bottom() - 6, "VU")
+
+
+
+
+
+
+
 
 
 
@@ -378,9 +395,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
         # Curve
         self.curve_widget = EqCurveWidget(frame)
         main.addWidget(self.curve_widget)
-        # Master VU meter
-        self.vu_meter = StereoVuMeter(frame)
-        main.addWidget(self.vu_meter)
         # Master VU meter
         self.vu_meter = StereoVuMeter(frame)
         main.addWidget(self.vu_meter)
