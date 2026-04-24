@@ -524,16 +524,15 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.btn_nav_library = nav("Library")
         self.btn_nav_now_playing = nav("Now Playing")
         self.btn_nav_stats = nav("Statistics")
-        self.btn_nav_eq = nav("EQ")
-        self.btn_nav_eq = nav("EQ")
-        self.btn_nav_eq.clicked.connect(self.open_graphic_equalizer)
-        sidebar_layout.addWidget(self.btn_nav_eq)
 
 
         sidebar_layout.addWidget(self.btn_nav_home)
         sidebar_layout.addWidget(self.btn_nav_library)
         sidebar_layout.addWidget(self.btn_nav_now_playing)
         sidebar_layout.addWidget(self.btn_nav_stats)
+
+        self.btn_nav_eq = nav("EQ")
+        self.btn_nav_eq.clicked.connect(self.open_graphic_equalizer)
         sidebar_layout.addWidget(self.btn_nav_eq)
 
         sidebar_layout.addStretch()
