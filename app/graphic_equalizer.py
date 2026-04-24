@@ -105,6 +105,57 @@ class EqCurveWidget(QtWidgets.QWidget):
         painter.setPen(curve_pen)
         painter.drawPath(path)
 
+def paintEvent(self, event):
+    if not self._ready:
+        return
+
+    rect = self.rect().adjusted(12, 12, -12, -12)
+    if rect.width() < 5 or rect.height() < 5:
+        return
+
+    painter = QtGui.QPainter(self)
+    painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+    # Background
+    painter.fillRect(rect, QtGui.QColor("#101010"))
+
+    # Collect slider points
+    points = []
+    for i, slider in enumerate(self.parent().sliders):
+        x = rect.left() + (rect.width() * i) / 9
+        y = rect.bottom() - ((slider.value() + 12) / 24.0) * rect.height()
+        points.append(QtCore.QPointF(x, y))
+
+    if len(points) < 3:
+        return
+
+    # Smooth spline path
+    path = QtGui.QPainterPath(points[0])
+    for i in range(1, len(points) - 2):
+        p0 = points[i]
+        p1 = points[i + 1]
+        mid = QtCore.QPointF((p0.x() + p1.x()) / 2, (p0.y() + p1.y()) / 2)
+        path.quadTo(p0, mid)
+    path.quadTo(points[-2], points[-1])
+
+    # Soft fill under curve
+    fill_path = QtGui.QPainterPath(path)
+    fill_path.lineTo(rect.bottomRight())
+    fill_path.lineTo(rect.bottomLeft())
+    fill_path.closeSubpath()
+
+    gradient = QtGui.QLinearGradient(rect.left(), rect.top(), rect.left(), rect.bottom())
+    gradient.setColorAt(0.0, QtGui.QColor(29, 185, 84, 60))
+    gradient.setColorAt(1.0, QtGui.QColor(29, 185, 84, 10))
+    painter.fillPath(fill_path, gradient)
+
+    # Draw curve line
+    pen = QtGui.QPen(QtGui.QColor("#1DB954"))
+    pen.setWidth(3)
+    pen.setCapStyle(QtCore.Qt.RoundCap)
+    pen.setJoinStyle(QtCore.Qt.RoundJoin)
+    painter.setPen(pen)
+    painter.drawPath(path)
 
 class LedMeter(QtWidgets.QWidget):
     """Vertical LED meter with peak-hold indicator and glow."""
@@ -238,14 +289,6 @@ class StereoVuMeter(QtWidgets.QWidget):
         painter.drawText(mid + 10, rect.bottom() - 6, "VU")
 
 
-
-
-
-
-
-
-
-
 class GraphicEqualizer(QtWidgets.QWidget):
     """NovaTurn 10-band EQ with VLC shaping and state persistence."""
 
@@ -275,6 +318,8 @@ class GraphicEqualizer(QtWidgets.QWidget):
             "Jazz": [2, 3, 2, 0, 0, 1, 2, 3, 3, 2],
             "Classical": [0, 1, 2, 3, 2, 1, 0, -1, -2, -3],
             "Vocal Boost": [-2, -1, 1, 3, 4, 4, 3, 1, -1, -2],
+            "Pop": [2, 3, 2, 1, -2, 0, 2, 3, 4, 4],
+
         }
         self.user_presets = {}
         base_dir = os.path.dirname(__file__)
@@ -805,7 +850,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
         self._animate_sliders_to(new)
         self._save_state()
 
-
     # ------------------------------
     # A/B
     # ------------------------------
@@ -887,13 +931,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
         for anim in animations:
             anim.start()
 
-
-
-
-
-
-
-
     # ------------------------------
     # Fade-in Animation
     # ------------------------------
@@ -916,6 +953,3 @@ if __name__ == "__main__":
     w = GraphicEqualizer()
     w.show()
     sys.exit(app.exec_())
-
-
-
