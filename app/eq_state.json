@@ -1,16 +1,16 @@
 {
   "gains": [
-    1,
-    2,
     4,
-    6,
+    5,
     7,
+    9,
+    10,
+    10,
+    9,
     7,
-    6,
-    4,
-    -3,
-    7
+    5,
+    4
   ],
-  "auto_gain": false,
+  "auto_gain": true,
   "limiter": false
 }

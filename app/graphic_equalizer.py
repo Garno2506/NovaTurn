@@ -107,17 +107,19 @@ class EqCurveWidget(QtWidgets.QWidget):
 
 
 class LedMeter(QtWidgets.QWidget):
-    """Small vertical LED meter that reacts to slider gain."""
+    """Vertical LED meter with peak-hold indicator."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.level = 0.0  # 0.0 to 1.0
-        self.setMinimumWidth(8)
-        self.setMaximumWidth(8)
+        self.level = 0.0
+        self.peak = 0.0
+        self.setMinimumWidth(10)
+        self.setMaximumWidth(10)
         self.setMinimumHeight(80)
 
-    def set_level(self, value: float):
-        self.level = max(0.0, min(1.0, float(value)))
+    def set_levels(self, level, peak):
+        self.level = max(0.0, min(1.0, float(level)))
+        self.peak = max(0.0, min(1.0, float(peak)))
         self.update()
 
     def paintEvent(self, event):
@@ -130,21 +132,24 @@ class LedMeter(QtWidgets.QWidget):
         # Background
         painter.fillRect(rect, QtGui.QColor("#202020"))
 
-        # LED height
+        # LED bar
         led_height = int(h * self.level)
-        if led_height <= 0:
-            return
+        if led_height > 0:
+            if self.level < 0.33:
+                color = QtGui.QColor("#1DB954")
+            elif self.level < 0.66:
+                color = QtGui.QColor("#E6C229")
+            else:
+                color = QtGui.QColor("#FF3B30")
 
-        # Colour based on level
-        if self.level < 0.33:
-            color = QtGui.QColor("#1DB954")  # green
-        elif self.level < 0.66:
-            color = QtGui.QColor("#E6C229")  # yellow
-        else:
-            color = QtGui.QColor("#FF3B30")  # red
+            bar_rect = QtCore.QRect(rect.left(), rect.bottom() - led_height, rect.width(), led_height)
+            painter.fillRect(bar_rect, color)
 
-        led_rect = QtCore.QRect(rect.left(), rect.bottom() - led_height, rect.width(), led_height)
-        painter.fillRect(led_rect, color)
+        # Peak marker
+        peak_y = rect.bottom() - int(h * self.peak)
+        peak_rect = QtCore.QRect(rect.left(), peak_y - 2, rect.width(), 3)
+        painter.fillRect(peak_rect, QtGui.QColor("#FFFFFF"))
+
 
 
 class GraphicEqualizer(QtWidgets.QWidget):
@@ -155,6 +160,7 @@ class GraphicEqualizer(QtWidgets.QWidget):
         self.setWindowFlags(QtCore.Qt.Window)   # <-- FIXES AUTO-CLOSE
 
         self.led_meters = []   # LED bars for each slider
+        self.peak_levels = [0.0] * 10
 
         self.setWindowTitle("NovaTurn Graphic Equalizer")
         self.setMinimumSize(980, 520)
@@ -515,8 +521,19 @@ class GraphicEqualizer(QtWidgets.QWidget):
 
         for i, g in enumerate(gains):
             level = (g + 12) / 24.0
+
+            # Peak logic
+            if level > self.peak_levels[i]:
+                # Fast attack
+                self.peak_levels[i] = level
+            else:
+                # Slow decay
+                self.peak_levels[i] = max(0.0, self.peak_levels[i] - 0.01)
+
+            # Update LED widget
             if i < len(self.led_meters):
-                self.led_meters[i].set_level(level)
+                self.led_meters[i].set_levels(level, self.peak_levels[i])
+
 
     # ------------------------------
     # Reset
