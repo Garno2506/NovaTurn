@@ -214,7 +214,6 @@ class LedMeter(QtWidgets.QWidget):
         peak_rect = QtCore.QRect(rect.left(), peak_y - 2, rect.width(), 3)
         painter.fillRect(peak_rect, QtGui.QColor("#FFFFFF"))
 
-
 class StereoVuMeter(QtWidgets.QWidget):
     """Master stereo VU meter with peak hold, glow, and label."""
 
@@ -623,7 +622,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
             background-color: #202820;
         }}
         """
-
     # ------------------------------
     # Slider Logic
     # ------------------------------
@@ -915,8 +913,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
 
         super().closeEvent(event)
 
-
-
     def _animate_sliders_to(self, target_gains, duration=350):
         """Smoothly animate sliders to new preset values."""
         animations = []
@@ -951,7 +947,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
         anim.setEndValue(1.0)
         anim.setEasingCurve(QtCore.QEasingCurve.InOutQuad)
         anim.start()
-
 
 if __name__ == "__main__":
     import sys
