@@ -100,10 +100,14 @@ class EqCurveWidget(QtWidgets.QWidget):
         painter.fillPath(fill_path, gradient)
 
         # Stroke
-        curve_pen = QtGui.QPen(QtGui.QColor(ACCENT_SOFT))
-        curve_pen.setWidth(2)
+        # Stroke (match button highlight exactly)
+        curve_pen = QtGui.QPen(QtGui.QColor(ACCENT))   # #1DB954
+        curve_pen.setWidth(1)                          # same thickness as button border
+        curve_pen.setCapStyle(QtCore.Qt.RoundCap)
+        curve_pen.setJoinStyle(QtCore.Qt.RoundJoin)
         painter.setPen(curve_pen)
         painter.drawPath(path)
+
 
 def paintEvent(self, event):
     if not self._ready:
@@ -293,7 +297,18 @@ class GraphicEqualizer(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowFlags(QtCore.Qt.Window)   # <-- FIXES AUTO-CLOSE
+        # Remove Windows icon + remove maximize/fullscreen button
+        self.setWindowFlags(
+            QtCore.Qt.Window |
+            QtCore.Qt.CustomizeWindowHint |
+            QtCore.Qt.WindowTitleHint |
+            QtCore.Qt.WindowMinimizeButtonHint |
+            QtCore.Qt.WindowCloseButtonHint
+)
+
+        # Force-remove the Windows icon
+        self.setWindowIcon(QtGui.QIcon())
+
 
         self.led_meters = []   # LED bars for each slider
         self.peak_levels = [0.0] * 10
@@ -314,10 +329,9 @@ class GraphicEqualizer(QtWidgets.QWidget):
             "Flat": [0] * 10,
             "Rock": [3, 5, 4, 1, -1, -1, 2, 4, 5, 4],
             "Jazz": [2, 3, 2, 0, 0, 1, 2, 3, 3, 2],
-            "Classical": [0, 1, 2, 3, 2, 1, 0, -1, -2, -3],
-            "Vocal Boost": [-2, -1, 1, 3, 4, 4, 3, 1, -1, -2],
             "Pop": [2, 3, 2, 1, -2, 0, 2, 3, 4, 4],
-
+            "Vocal Boost": [-2, -1, 1, 3, 4, 4, 3, 1, -1, -2],
+            "Classical": [0, 1, 2, 3, 2, 1, 0, -1, -2, -3],
         }
         self.user_presets = {}
         base_dir = os.path.dirname(__file__)
@@ -341,6 +355,8 @@ class GraphicEqualizer(QtWidgets.QWidget):
         self._build_ui()
         self._load_user_presets()
         self._load_state()
+
+
         self._update_curve()
         self._apply_to_vlc()
 
@@ -505,9 +521,19 @@ class GraphicEqualizer(QtWidgets.QWidget):
                 border: 1px solid #444444;
                 border-radius: 4px;
                 background-color: {BG_DARK};
+                padding-top: 14px;   /* space for the title */
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: padding;
+                subcontrol-position: top left;
+                left: 8px;
+               top: 2px;            /* raise title cleanly */
             }}
         """)
+
         preset_layout = QtWidgets.QVBoxLayout(preset_box)
+        preset_layout.setContentsMargins(8, 14, 8, 8)   # top margin raised
+
 
         self.preset_combo = QtWidgets.QComboBox()
         self.preset_combo.setStyleSheet(f"""
@@ -519,6 +545,11 @@ class GraphicEqualizer(QtWidgets.QWidget):
             }}
         """)
         self._refresh_preset_combo()
+        # Force default preset to Pop
+        idx = self.preset_combo.findText("★ Pop")
+        if idx >= 0:
+            self.preset_combo.setCurrentIndex(idx)
+
 
         btn_apply = QtWidgets.QPushButton("Apply Preset")
         btn_apply.setStyleSheet(self._button_style())
