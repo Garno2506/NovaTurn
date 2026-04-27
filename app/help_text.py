@@ -81,7 +81,7 @@ HELP_COL2 = """
     <h2 style="color: white; font-weight: bold;">Playing Media</h2>
 
     <ul>
-        <li>Default password: <b>letmein</b></li>
+        <li>There are <b>Several</b> to play meadia</li>
         <li>Change your password after first login.</li>
         <li>To change your password, log in first, then go to the Admin Only menu and select <b>Change Password</b>.</li>
         <li>Never share your password with others.</li>
