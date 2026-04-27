@@ -2286,7 +2286,8 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         # OSK OPENS WHEN YOUTUBE SEARCH GETS FOCUS WHEN NOT OVER RIDEN BY OSK BUTTON
         # ------------------------------------------------------------
         if obj is self.youtube_search and event.type() == QtCore.QEvent.FocusIn:
-            if not self.manual_osk_enabled:
+            # Only auto‑open OSK if NOT manual mode AND NOT mouse click
+            if (not self.manual_osk_enabled) and (QtWidgets.QApplication.mouseButtons() == QtCore.Qt.NoButton):
                 self._kb_target = self.youtube_search
                 self._show_keyboard()
             return False
@@ -2323,10 +2324,12 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         # OSK OPENS OSK WHEN SEARCH LIBRARY GETS FOCUS UNLESS OSK BUTTON IS OFF
         # ------------------------------------------------------------
         if obj is self.search_edit and event.type() == QtCore.QEvent.FocusIn:
-            if not self.manual_osk_enabled:
+            # Only auto‑open OSK if NOT manual mode AND NOT mouse click
+            if (not self.manual_osk_enabled) and (QtWidgets.QApplication.mouseButtons() == QtCore.Qt.NoButton):
                 self._kb_target = self.search_edit
                 self._show_keyboard()
             return False
+
 
         # ------------------------------------------------------------
         # YOUTUBE SEARCH HOVER ICON
