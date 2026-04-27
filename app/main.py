@@ -429,6 +429,9 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         # Artist filter
         self.current_artist_filter = None
 
+        # Manual OSK override mode
+        self.manual_osk_enabled = False
+
         # Build UI first
         self._build_ui()
         self._build_help_page()   # ✔ ADD THIS
@@ -549,6 +552,11 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         sidebar_layout.addWidget(self.btn_nav_library)
         sidebar_layout.addWidget(self.btn_nav_now_playing)
         sidebar_layout.addWidget(self.btn_nav_stats)
+        # --- NEW: Manual OSK toggle button ---
+        self.btn_toggle_osk = nav("Turn On OSK")
+        self.btn_toggle_osk.setCheckable(True)
+        sidebar_layout.addWidget(self.btn_toggle_osk)
+
 
         self.btn_nav_eq = nav("EQ")
         self.btn_nav_eq.clicked.connect(self.open_graphic_equalizer)
@@ -1109,6 +1117,9 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.btn_nav_library.clicked.connect(lambda: self.set_page(1))
         self.btn_nav_now_playing.clicked.connect(lambda: self.set_page(2))
         self.btn_nav_stats.clicked.connect(lambda: self._load_statistics_page())
+
+        # NEW — Manual OSK toggle button
+        self.btn_toggle_osk.toggled.connect(self._on_manual_osk_toggled)
 
         # Toggle sidebar
         self.btn_toggle_sidebar.clicked.connect(self.toggle_sidebar)
@@ -2149,6 +2160,17 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         for artist, count in top_artists:
             self.stats_list_artists.addItem(f"{artist} — {count} tracks")
 
+    def _on_manual_osk_toggled(self, checked):
+        self.manual_osk_enabled = checked
+
+        if checked:
+            self.btn_toggle_osk.setText("Turn Off OSK")
+            self._kb_target = self.search_edit  # safe default
+            self._show_keyboard()
+        else:
+            self.btn_toggle_osk.setText("Turn On OSK")
+            self._hide_keyboard()
+
     # ============================================================
     #  OSK VIRTUAL KEYBOARD HELPERS
     #  OSK MINI KEYBOARD FLOATING IS ON LINE 644 BUT MAY MOVE AS MORE CODE ADDED
@@ -2261,11 +2283,13 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             return False
 
         # ------------------------------------------------------------
-        # OSK OPENS WHEN YOUTUBE SEARCH GETS FOCUS
+        # OSK OPENS WHEN YOUTUBE SEARCH GETS FOCUS WHEN NOT OVER RIDEN BY OSK BUTTON
         # ------------------------------------------------------------
         if obj is self.youtube_search and event.type() == QtCore.QEvent.FocusIn:
-            self._kb_target = self.youtube_search
-            self._show_keyboard()
+            if not self.manual_osk_enabled:
+                self._kb_target = self.youtube_search
+                self._show_keyboard()
+            return False
 
         # ------------------------------------------------------------
         # PHYSICAL KEYBOARD ENTER HANDLING (YOUTUBE + LIBRARY)
@@ -2296,11 +2320,13 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
                 return True
 
         # ------------------------------------------------------------
-        # OSK OPENS OSK WHEN SEARCH LIBRARY GETS FOCUS
+        # OSK OPENS OSK WHEN SEARCH LIBRARY GETS FOCUS UNLESS OSK BUTTON IS OFF
         # ------------------------------------------------------------
         if obj is self.search_edit and event.type() == QtCore.QEvent.FocusIn:
-            self._kb_target = self.search_edit
-            self._show_keyboard()
+            if not self.manual_osk_enabled:
+                self._kb_target = self.search_edit
+                self._show_keyboard()
+            return False
 
         # ------------------------------------------------------------
         # YOUTUBE SEARCH HOVER ICON
