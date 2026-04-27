@@ -1659,8 +1659,8 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             self.position_slider.setValue(0)
             self.position_bar.setValue(0)
 
-        # --- 5‑second gap logic ---
-        if self.gap_active and time.time() - self.gap_start_time >= 5:
+        # --- 10‑second gap logic ---
+        if self.gap_active and time.time() - self.gap_start_time >= 10:
             self.gap_active = False
             self.next_track()
 
