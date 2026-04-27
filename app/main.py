@@ -431,9 +431,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
         # Manual OSK override mode
         self.manual_osk_enabled = False
-        # Track whether focus came from a physical mouse click
-        self._mouse_clicked = False
-
 
         # Build UI first
         self._build_ui()
@@ -2286,26 +2283,12 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             return False
 
         # ------------------------------------------------------------
-        # Detect physical mouse click BEFORE focus happens
-        # ------------------------------------------------------------
-        if event.type() == QtCore.QEvent.MouseButtonPress:
-            # If OSK is visible, NEVER treat clicks as mouse clicks
-            if hasattr(self, "keyboard") and not self.keyboard.isHidden():
-                self._mouse_clicked = False
-            else:
-                if obj is self.search_edit or obj is self.youtube_search:
-                    self._mouse_clicked = True
-
-        # ------------------------------------------------------------
         # OSK OPENS WHEN YOUTUBE SEARCH GETS FOCUS WHEN NOT OVER RIDEN BY OSK BUTTON
         # ------------------------------------------------------------
         if obj is self.youtube_search and event.type() == QtCore.QEvent.FocusIn:
-            if not self.manual_osk_enabled:
-                # Only open OSK if focus NOT caused by mouse
-                if not self._mouse_clicked:
-                    self._kb_target = self.youtube_search
-                    self._show_keyboard()
-            self._mouse_clicked = False
+            if self.manual_osk_enabled:
+                self._kb_target = self.youtube_search
+                self._show_keyboard()
             return False
 
         # ------------------------------------------------------------
@@ -2319,7 +2302,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             QtCore.Qt.Key_Enter,
         ):
 
-            # If YouTube search has focus
+            # YouTube search
             if self.youtube_search.hasFocus():
                 text = self.youtube_search.text().strip()
                 if text:
@@ -2327,7 +2310,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
                 self.youtube_search.clear()
                 return True
 
-            # If Library search has focus
+            # Library search
             if self.search_edit.hasFocus():
                 self.search_edit.clear()
                 return True
@@ -2337,12 +2320,9 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         # OSK OPENS OSK WHEN SEARCH LIBRARY GETS FOCUS UNLESS OSK BUTTON IS OFF
         # ------------------------------------------------------------
         if obj is self.search_edit and event.type() == QtCore.QEvent.FocusIn:
-            if not self.manual_osk_enabled:
-                # Only open OSK if focus NOT caused by mouse
-                if not self._mouse_clicked:
-                    self._kb_target = self.search_edit
-                    self._show_keyboard()
-            self._mouse_clicked = False
+            if self.manual_osk_enabled:
+                self._kb_target = self.search_edit
+                self._show_keyboard()
             return False
 
         # ------------------------------------------------------------
