@@ -129,3 +129,4 @@ class MiniKeyboard(QtWidgets.QFrame):
         # Prevent physical keyboard from doing anything while OSK has focus
         event.accept()
 
+
