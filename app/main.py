@@ -2425,18 +2425,22 @@ def main():
     def launch_main_window():
         player = MediaPlayer()
 
-        # Blur disabled so native title bar and buttons stay fully visible
-        # try:
-        #     hwnd = int(player.winId())
-        #     enable_windows_blur(hwnd)
-        # except Exception as e:
-        #     print("Blur not available:", e)
-
-        player.show()
+        # Force full‑screen on launch
+        player.showMaximized()
 
         # If an update is available, prompt once the main window exists
         if splash._latest_tag and is_update_newer(APP_LOCAL_VERSION, splash._latest_tag):
             prompt_update(player, splash._latest_tag)
+    def launch_main_window():
+        player = MediaPlayer()
+
+        # Force full‑screen on launch
+        player.showMaximized()
+
+        # If an update is available, prompt once the main window exists
+        if splash._latest_tag and is_update_newer(APP_LOCAL_VERSION, splash._latest_tag):
+            prompt_update(player, splash._latest_tag)
+
 
     splash.start(launch_main_window)
 
