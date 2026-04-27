@@ -195,7 +195,6 @@ def prompt_update(parent, latest_tag: str):
         url = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
         webbrowser.open(url)
 
-
 # ============================================================
 #   CINEMATIC SPLASH SCREEN (FADE IN / OUT + VERSION)
 # ============================================================
@@ -543,15 +542,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
             return btn
 
-        self.btn_nav_home = nav("Home")
-        self.btn_nav_library = nav("Library")
-        self.btn_nav_now_playing = nav("Now Playing")
-        self.btn_nav_stats = nav("Statistics")
 
-        sidebar_layout.addWidget(self.btn_nav_home)
-        sidebar_layout.addWidget(self.btn_nav_library)
-        sidebar_layout.addWidget(self.btn_nav_now_playing)
-        sidebar_layout.addWidget(self.btn_nav_stats)
         # --- NEW: Manual OSK toggle button ---
         self.btn_toggle_osk = nav("Turn On OSK")
         self.btn_toggle_osk.setCheckable(True)
@@ -584,8 +575,14 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         # Apply default style
         self.btn_toggle_osk.setStyleSheet(self.osk_off_style)
 
-
-
+        self.btn_nav_home = nav("Home")
+        self.btn_nav_library = nav("Library")
+        self.btn_nav_now_playing = nav("Now Playing")
+        self.btn_nav_stats = nav("Statistics")
+        sidebar_layout.addWidget(self.btn_nav_home)
+        sidebar_layout.addWidget(self.btn_nav_library)
+        sidebar_layout.addWidget(self.btn_nav_now_playing)
+        sidebar_layout.addWidget(self.btn_nav_stats)
         self.btn_nav_eq = nav("EQ")
         self.btn_nav_eq.clicked.connect(self.open_graphic_equalizer)
         sidebar_layout.addWidget(self.btn_nav_eq)
@@ -762,7 +759,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.login_button = QtWidgets.QPushButton("Login")
         self.login_button.setFixedHeight(34)
         top_bar.addWidget(self.login_button)
-
 
                 # Help button
         self.help_button = QtWidgets.QPushButton("?")
