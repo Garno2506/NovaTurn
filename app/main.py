@@ -431,6 +431,9 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
         # Manual OSK override mode
         self.manual_osk_enabled = False
+        # Track whether focus came from a physical mouse click
+        self._mouse_clicked = False
+
 
         # Build UI first
         self._build_ui()
@@ -2283,53 +2286,64 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             return False
 
         # ------------------------------------------------------------
+        # Detect physical mouse click BEFORE focus happens
+        # ------------------------------------------------------------
+        if event.type() == QtCore.QEvent.MouseButtonPress:
+            # If OSK is visible, NEVER treat clicks as mouse clicks
+            if hasattr(self, "keyboard") and not self.keyboard.isHidden():
+                self._mouse_clicked = False
+            else:
+                if obj is self.search_edit or obj is self.youtube_search:
+                    self._mouse_clicked = True
+
+        # ------------------------------------------------------------
         # OSK OPENS WHEN YOUTUBE SEARCH GETS FOCUS WHEN NOT OVER RIDEN BY OSK BUTTON
         # ------------------------------------------------------------
         if obj is self.youtube_search and event.type() == QtCore.QEvent.FocusIn:
-            # Only auto‑open OSK if NOT manual mode AND NOT mouse click
-            if (not self.manual_osk_enabled) and (QtWidgets.QApplication.mouseButtons() == QtCore.Qt.NoButton):
-                self._kb_target = self.youtube_search
-                self._show_keyboard()
+            if not self.manual_osk_enabled:
+                # Only open OSK if focus NOT caused by mouse
+                if not self._mouse_clicked:
+                    self._kb_target = self.youtube_search
+                    self._show_keyboard()
+            self._mouse_clicked = False
             return False
 
         # ------------------------------------------------------------
         # PHYSICAL KEYBOARD ENTER HANDLING (YOUTUBE + LIBRARY)
+        # ------------------------------------------------------------
+        # ------------------------------------------------------------
+        # ENTER KEY HANDLING (PHYSICAL + OSK)
         # ------------------------------------------------------------
         if event.type() == QtCore.QEvent.KeyPress and event.key() in (
             QtCore.Qt.Key_Return,
             QtCore.Qt.Key_Enter,
         ):
 
-            # Library search Enter
-            if self._kb_target is self.search_edit:
-                self.search_edit.clear()
-                self._hide_keyboard()
-                return True
-
-            # YouTube search Enter
-            if self._kb_target is self.youtube_search:
-                text = self.youtube_search.text()
-                self._hide_keyboard()
-
-                # IMPORTANT: run YouTube search BEFORE clearing
-                if text.strip():
+            # If YouTube search has focus
+            if self.youtube_search.hasFocus():
+                text = self.youtube_search.text().strip()
+                if text:
                     self.on_youtube_search_clicked()
-
                 self.youtube_search.clear()
-                self.youtube_search.clearFocus()
-
                 return True
+
+            # If Library search has focus
+            if self.search_edit.hasFocus():
+                self.search_edit.clear()
+                return True
+
 
         # ------------------------------------------------------------
         # OSK OPENS OSK WHEN SEARCH LIBRARY GETS FOCUS UNLESS OSK BUTTON IS OFF
         # ------------------------------------------------------------
         if obj is self.search_edit and event.type() == QtCore.QEvent.FocusIn:
-            # Only auto‑open OSK if NOT manual mode AND NOT mouse click
-            if (not self.manual_osk_enabled) and (QtWidgets.QApplication.mouseButtons() == QtCore.Qt.NoButton):
-                self._kb_target = self.search_edit
-                self._show_keyboard()
+            if not self.manual_osk_enabled:
+                # Only open OSK if focus NOT caused by mouse
+                if not self._mouse_clicked:
+                    self._kb_target = self.search_edit
+                    self._show_keyboard()
+            self._mouse_clicked = False
             return False
-
 
         # ------------------------------------------------------------
         # YOUTUBE SEARCH HOVER ICON
