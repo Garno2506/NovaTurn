@@ -556,6 +556,34 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.btn_toggle_osk = nav("Turn On OSK")
         self.btn_toggle_osk.setCheckable(True)
         sidebar_layout.addWidget(self.btn_toggle_osk)
+                # OSK toggle button styles
+        self.osk_off_style = """
+            QPushButton {
+                background-color: #2A2A2A;
+                border: 2px solid #444;
+                border-radius: 6px;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #3A3A3A;
+            }
+        """
+
+        self.osk_on_style = """
+            QPushButton {
+                background-color: #2A2A2A;
+                border: 2px solid #1DB954;
+                border-radius: 6px;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #3A3A3A;
+            }
+        """
+
+        # Apply default style
+        self.btn_toggle_osk.setStyleSheet(self.osk_off_style)
+
 
 
         self.btn_nav_eq = nav("EQ")
@@ -2165,11 +2193,15 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
         if checked:
             self.btn_toggle_osk.setText("Turn Off OSK")
-            self._kb_target = self.search_edit  # safe default
+            self.btn_toggle_osk.setStyleSheet(self.osk_on_style)
+            self._kb_target = None
             self._show_keyboard()
         else:
             self.btn_toggle_osk.setText("Turn On OSK")
+            self.btn_toggle_osk.setStyleSheet(self.osk_off_style)
+            self._kb_target = None
             self._hide_keyboard()
+
 
     # ============================================================
     #  OSK VIRTUAL KEYBOARD HELPERS
