@@ -197,3 +197,31 @@ class StylesMixin:
             """
         )
 
+
+        # ------------------------------------------------------------
+        # OSK Toggle Button Styling
+        # ------------------------------------------------------------
+        self.osk_off_style = """
+            QPushButton {
+                background-color: #2A2A2A;
+                border: 2px solid #444;
+                border-radius: 6px;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #3A3A3A;
+            }
+        """
+
+        self.osk_on_style = """
+            QPushButton {
+                background-color: #2A2A2A;
+                border: 2px solid #1DB954;
+                border-radius: 6px;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #3A3A3A;
+            }
+        """
+
