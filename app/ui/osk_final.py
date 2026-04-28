@@ -88,6 +88,16 @@ class MiniKeyboard(QtWidgets.QFrame):
                 btn.clicked.connect(lambda _, ch=char: self.keyPressed.emit(ch))
                 layout.addWidget(btn, r, c)
 
+        # ------------------------------------------------------------
+        # NovaTurn label beside the M row
+        # ------------------------------------------------------------
+        label = QtWidgets.QLabel("NovaTurn’s Draggable Keyboard")
+        label.setStyleSheet("color: #CCCCCC; font-size: 12px;")
+        label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+
+        # Place it to the right of the M row (row 3)
+        layout.addWidget(label, 3, len(rows[3]), 1, 3)
+
         # Space bar
         space = QtWidgets.QPushButton("SPACE")
         space.clicked.connect(lambda: self.keyPressed.emit(" "))
@@ -104,6 +114,7 @@ class MiniKeyboard(QtWidgets.QFrame):
         layout.addWidget(enter, 4, 8, 1, 2)
 
     # ----- Drag handling -----
+
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:
