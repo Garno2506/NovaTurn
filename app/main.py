@@ -543,34 +543,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             return btn
 
 
-        # --- NEW: Manual OSK toggle button ---
-        self.btn_toggle_osk = nav("Turn On OSK")
-        self.btn_toggle_osk.setCheckable(True)
-        sidebar_layout.addWidget(self.btn_toggle_osk)
-                # OSK toggle button styles
-        self.osk_off_style = """
-            QPushButton {
-                background-color: #2A2A2A;
-                border: 2px solid #444;
-                border-radius: 6px;
-                color: white;
-            }
-            QPushButton:hover {
-                background-color: #3A3A3A;
-            }
-        """
-
-        self.osk_on_style = """
-            QPushButton {
-                background-color: #2A2A2A;
-                border: 2px solid #1DB954;
-                border-radius: 6px;
-                color: white;
-            }
-            QPushButton:hover {
-                background-color: #3A3A3A;
-            }
-        """
 
         # Apply default style
         self.btn_toggle_osk.setStyleSheet(self.osk_off_style)
