@@ -195,6 +195,7 @@ def prompt_update(parent, latest_tag: str):
         url = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
         webbrowser.open(url)
 
+
 # ============================================================
 #   CINEMATIC SPLASH SCREEN (FADE IN / OUT + VERSION)
 # ============================================================
@@ -542,19 +543,19 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
             return btn
 
-
-
-        # Apply default style
-        self.btn_toggle_osk.setStyleSheet(self.osk_off_style)
-
         self.btn_nav_home = nav("Home")
         self.btn_nav_library = nav("Library")
         self.btn_nav_now_playing = nav("Now Playing")
         self.btn_nav_stats = nav("Statistics")
+
         sidebar_layout.addWidget(self.btn_nav_home)
         sidebar_layout.addWidget(self.btn_nav_library)
         sidebar_layout.addWidget(self.btn_nav_now_playing)
         sidebar_layout.addWidget(self.btn_nav_stats)
+
+
+
+
         self.btn_nav_eq = nav("EQ")
         self.btn_nav_eq.clicked.connect(self.open_graphic_equalizer)
         sidebar_layout.addWidget(self.btn_nav_eq)
@@ -721,6 +722,72 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
         top_bar.addWidget(youtube_container)
         # End Of YouTube Search Bar
+
+        # ------------------------------------------------------------
+        # OSK Toggle Button (icon + text)(safe placement, styling included)
+        # ------------------------------------------------------------
+        self.btn_toggle_osk = QtWidgets.QPushButton()
+        self.btn_toggle_osk.setCheckable(True)
+        self.btn_toggle_osk.setFixedHeight(34)
+        self.btn_toggle_osk.setFixedWidth(140)
+
+        # Draw keyboard icon (24x24)
+        kb_pix = QtGui.QPixmap(24, 24)
+        kb_pix.fill(QtCore.Qt.transparent)
+        p = QtGui.QPainter(kb_pix)
+        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        pen = QtGui.QPen(QtGui.QColor("#1DB954"), 2)
+        p.setPen(pen)
+
+        # Keyboard outline
+        p.drawRoundedRect(3, 6, 18, 12, 3, 3)
+
+        # Keys (3 rows)
+        p.drawLine(6, 10, 18, 10)
+        p.drawLine(6, 14, 18, 14)
+
+        p.end()
+
+        kb_icon = QtGui.QIcon(kb_pix)
+
+        # Inline styling (OFF state)
+        self.osk_off_style = """
+            QPushButton {
+                background-color: #2A2A2A;
+                border: 2px solid #444;
+                border-radius: 6px;
+                color: white;
+                padding-left: 6px;
+                text-align: left;
+            }
+            QPushButton:hover {
+                background-color: #3A3A3A;
+            }
+        """
+
+        # Inline styling (ON state)
+        self.osk_on_style = """
+            QPushButton {
+                background-color: #2A2A2A;
+                border: 2px solid #1DB954;
+                border-radius: 6px;
+                color: white;
+                padding-left: 6px;
+                text-align: left;
+            }
+            QPushButton:hover {
+                background-color: #3A3A3A;
+            }
+        """
+
+        # Initial state
+        self.btn_toggle_osk.setIcon(kb_icon)
+        self.btn_toggle_osk.setIconSize(QtCore.QSize(24, 24))
+        self.btn_toggle_osk.setText("  Keyboard OFF")
+        self.btn_toggle_osk.setStyleSheet(self.osk_off_style)
+        self.btn_toggle_osk.setToolTip("Turn On Touch Screen Keyboard")
+
+        top_bar.addWidget(self.btn_toggle_osk)
 
         top_bar.addStretch()
 
@@ -2160,16 +2227,15 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self.manual_osk_enabled = checked
 
         if checked:
-            self.btn_toggle_osk.setText("Turn Off OSK")
+            self.btn_toggle_osk.setText("  Keyboard ON")
             self.btn_toggle_osk.setStyleSheet(self.osk_on_style)
             self._kb_target = None
             self._show_keyboard()
         else:
-            self.btn_toggle_osk.setText("Turn On OSK")
+            self.btn_toggle_osk.setText("  Keyboard OFF")
             self.btn_toggle_osk.setStyleSheet(self.osk_off_style)
             self._kb_target = None
             self._hide_keyboard()
-
 
     # ============================================================
     #  OSK VIRTUAL KEYBOARD HELPERS
