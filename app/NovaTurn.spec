@@ -6,6 +6,7 @@ import sys
 # PyInstaller-safe project root
 project_root = os.path.abspath(os.getcwd())
 
+
 # Helper to include entire folders cleanly
 def collect_folder(src_folder, dest_folder):
     return [
