@@ -176,6 +176,7 @@ def is_update_newer(local_ver: str, remote_ver: str) -> bool:
 
     return norm(remote_ver) > norm(local_ver)
 
+
 def prompt_update(parent, latest_tag: str):
     """Ask user if they want to open the latest release page."""
     if not latest_tag:
@@ -193,6 +194,7 @@ def prompt_update(parent, latest_tag: str):
     if msg.exec_() == QtWidgets.QMessageBox.Yes:
         url = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
         webbrowser.open(url)
+
 
 # ============================================================
 #   CINEMATIC SPLASH SCREEN (FADE IN / OUT + VERSION)
@@ -551,9 +553,13 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         sidebar_layout.addWidget(self.btn_nav_now_playing)
         sidebar_layout.addWidget(self.btn_nav_stats)
 
+
+
+
         self.btn_nav_eq = nav("EQ")
         self.btn_nav_eq.clicked.connect(self.open_graphic_equalizer)
         sidebar_layout.addWidget(self.btn_nav_eq)
+
         sidebar_layout.addStretch()
         root.addWidget(self.sidebar)
 
@@ -2374,6 +2380,7 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             if self.search_edit.hasFocus():
                 self.search_edit.clear()
                 return True
+
 
         # ------------------------------------------------------------
         # OSK OPENS OSK WHEN SEARCH LIBRARY GETS FOCUS UNLESS OSK BUTTON IS OFF
