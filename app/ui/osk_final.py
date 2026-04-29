@@ -4,43 +4,25 @@ import os
 
 
 def resource_path_dev(relative_path: str) -> str:
-    """
-    Dev mode: resolve path relative to project root (app/).
-    Assumes this file lives in app/ui/.
-    """
     base = os.path.dirname(os.path.dirname(__file__))  # ui → app
     return os.path.join(base, relative_path)
 
 
 def resource_path(relative_path: str) -> str:
-    """
-    PyInstaller-safe path resolver.
-    Uses sys._MEIPASS when running from a bundled EXE.
-    """
     if hasattr(sys, "_MEIPASS"):
         return os.path.join(sys._MEIPASS, relative_path)
     return resource_path_dev(relative_path)
 
 
 class MiniKeyboard(QtWidgets.QFrame):
-    """
-    Floating mini on-screen keyboard.
-
-    - Emits keyPressed(str) for each key.
-    - Draggable by clicking/dragging the background.
-    - PNG overlay is visual only (mouse-transparent).
-    - Positioning (docking) is handled by the main window.
-    """
-
     keyPressed = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # Track whether the user has manually moved the keyboard
         self.user_moved = False
 
-        # Load overlay image (works in dev and PyInstaller)
+        # Load overlay image
         self.image_path = resource_path("banners/NovaTurn_OSK.png")
 
         self.overlay = QtWidgets.QLabel(self)
@@ -48,8 +30,6 @@ class MiniKeyboard(QtWidgets.QFrame):
         self.overlay.setScaledContents(True)
         self.overlay.setGeometry(self.rect())
         self.overlay.lower()
-
-        # Let mouse events pass through the overlay to the buttons
         self.overlay.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
 
         self.setObjectName("miniKeyboard")
@@ -63,7 +43,6 @@ class MiniKeyboard(QtWidgets.QFrame):
             border-radius: 6px;
             padding: 8px;
         }
-
         QPushButton:pressed {
             background-color: rgba(255, 215, 0, 180);
             color: black;
@@ -73,6 +52,29 @@ class MiniKeyboard(QtWidgets.QFrame):
         layout = QtWidgets.QGridLayout(self)
         layout.setSpacing(6)
         layout.setContentsMargins(10, 10, 10, 10)
+
+        # ------------------------------------------------------------
+        # Close button ABOVE overlay (manual position)
+        # ------------------------------------------------------------
+        self.close_btn = QtWidgets.QPushButton("×", self)
+        self.close_btn.setFixedSize(26, 26)
+        self.close_btn.setToolTip("Close Keyboard")
+
+        self.close_btn.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(0, 0, 0, 140);
+                color: white;
+                font-size: 16px;
+                border: 1px solid #555;
+                border-radius: 13px;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 0, 0, 180);
+            }
+        """)
+
+        self.close_btn.clicked.connect(self.hide)
+        self.close_btn.raise_()
 
         rows = [
             list("1234567890"),
@@ -88,15 +90,11 @@ class MiniKeyboard(QtWidgets.QFrame):
                 btn.clicked.connect(lambda _, ch=char: self.keyPressed.emit(ch))
                 layout.addWidget(btn, r, c)
 
-        # ------------------------------------------------------------
         # NovaTurn label beside the M row
-        # ------------------------------------------------------------
-        label = QtWidgets.QLabel("NovaTurn’s Draggable Keyboard")
-        label.setStyleSheet("color: #CCCCCC; font-size: 12px;")
-        label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-
-        # Place it to the right of the M row (row 3)
-        layout.addWidget(label, 3, len(rows[3]), 1, 3)
+        self.label = QtWidgets.QLabel("NovaTurn’s Draggable Keyboard")
+        self.label.setStyleSheet("color: #CCCCCC; font-size: 12px;")
+        self.label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        layout.addWidget(self.label, 3, len(rows[3]), 1, 3)
 
         # Space bar
         space = QtWidgets.QPushButton("SPACE")
@@ -115,7 +113,6 @@ class MiniKeyboard(QtWidgets.QFrame):
 
     # ----- Drag handling -----
 
-
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:
             self._drag_pos = event.globalPos() - self.frameGeometry().topLeft()
@@ -127,17 +124,29 @@ class MiniKeyboard(QtWidgets.QFrame):
             self.move(event.globalPos() - self._drag_pos)
             event.accept()
 
-    # ----- Keep overlay covering the whole keyboard -----
+    # ----- Keep overlay and close button positioned -----
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
-        if hasattr(self, "overlay"):
-            self.overlay.setGeometry(self.rect())
+        self.overlay.setGeometry(self.rect())
 
-    # ----- Block physical keyboard input when OSK has focus -----
+        # ------------------------------------------------------------
+        # Position close button above the “R” in “Keyboard”
+        # ------------------------------------------------------------
+
+        label_x = self.label.x()
+        label_y = self.label.y()
+
+        # TWEAK HERE:
+        # +160 = move right/left
+        # -30  = move up/down
+        btn_x = label_x + 160
+        btn_y = label_y - 30
+
+        self.close_btn.move(btn_x, btn_y)
+        self.close_btn.raise_()
+
+    # ----- Block physical keyboard input -----
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        # Prevent physical keyboard from doing anything while OSK has focus
         event.accept()
-
-
