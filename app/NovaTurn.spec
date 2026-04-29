@@ -20,9 +20,8 @@ vlc_path      = os.path.join(project_root, "app", "vlc")
 banners_path  = os.path.join(project_root, "app", "banners")
 
 a = Analysis(
-    ['main.py'],          # You run Run.py, but PyInstaller builds from main.py
-    pathex=[project_root],
-    binaries=[],
+    [os.path.join(project_root, 'main.py')],
+
 
     datas=[
         # Branding assets
