@@ -94,7 +94,7 @@ from PyQt5.QtWidgets import QSplashScreen, QLabel
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import QTimer, QPropertyAnimation, QEasingCurve, QPoint
 from app.ui.osk_final import MiniKeyboard
-from PyQt5.QtCore import QThread, pyqtSignal
+
 # ------------------------------------------------------------
 # Pill-style delegate for "All Artists"
 # ------------------------------------------------------------
@@ -133,7 +133,7 @@ else:
 #   APP VERSION + GITHUB UPDATE HELPERS
 # ============================================================
 
-APP_LOCAL_VERSION = "1.0.0.0"  # GitHub Runner will overwrite this
+APP_LOCAL_VERSION = "1.0.0.0"  # your current build version
 GITHUB_OWNER = "Garno2506"
 GITHUB_REPO = "NovaTurn"
 GITHUB_API_LATEST = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
@@ -155,7 +155,7 @@ def get_latest_version():
 
 
 def is_update_newer(local_ver: str, remote_ver: str) -> bool:
-    """Compare semantic versions like 1.0.0.79 correctly."""
+    """Compare two version strings like v1.0.0.0 or 1.0.0.0."""
     if not remote_ver:
         return False
 
@@ -174,11 +174,7 @@ def is_update_newer(local_ver: str, remote_ver: str) -> bool:
             nums.append(0)
         return tuple(nums[:4])
 
-    try:
-        return norm(remote_ver) > norm(local_ver)
-    except Exception:
-        return False
-
+    return norm(remote_ver) > norm(local_ver)
 
 def prompt_update(parent, latest_tag: str):
     """Ask user if they want to open the latest release page."""
@@ -198,18 +194,9 @@ def prompt_update(parent, latest_tag: str):
         url = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
         webbrowser.open(url)
 
-
 # ============================================================
 #   CINEMATIC SPLASH SCREEN (FADE IN / OUT + VERSION)
 # ============================================================
-
-class UpdateCheckThread(QThread):
-    finished = pyqtSignal(str)
-
-    def run(self):
-        latest = get_latest_version()
-        self.finished.emit(latest or "")
-
 
 class NovaTurnSplash(QSplashScreen):
     """
@@ -217,10 +204,8 @@ class NovaTurnSplash(QSplashScreen):
       - Shows novaturn_splash.png
       - Bottom-left: 'Release vX.X.X.X'
       - Center text: 'Loading… Checking for updates…'
-      - Fade-in (1s), hold 1s, fade-out (1s)
-      - Async GitHub update check
-      - Async database warm-up
-      - No blocking, no minimum display delay
+      - Fade-in (1s), min display (2s), fade-out (1s)
+      - Runs GitHub version check while visible
     """
 
     def __init__(self, app: QtWidgets.QApplication):
@@ -228,36 +213,25 @@ class NovaTurnSplash(QSplashScreen):
         super().__init__(pix)
         self.app = app
 
-        # Timing
+        # Track timing
         self._start_ms = None
+        self._min_display_ms = 2000  # 2 seconds
         self._fade_duration_ms = 1000  # 1 second
 
         # Latest version from GitHub
         self._latest_tag = None
 
-        # Version label (bottom-left)
+        # Small, subtle version label (bottom-left)
         self.version_label = QLabel(self)
-
-        # --- FIX: Read version from EXE metadata (no pkg_resources) ---
-        try:
-            import win32api
-            info = win32api.GetFileVersionInfo(sys.executable, '\\')
-            ms = info['FileVersionMS']
-            ls = info['FileVersionLS']
-            version = f"{ms >> 16}.{ms & 0xFFFF}.{ls >> 16}.{ls & 0xFFFF}"
-        except Exception:
-            version = "1.0.0.0"
-
-        self.version_label.setText(f"Release {version}")
-
+        self.version_label.setText("Release " + APP_LOCAL_VERSION)
         font = QFont()
-        font.setPointSize(11)
+        font.setPointSize(11)  # small & subtle
         self.version_label.setFont(font)
         self.version_label.setStyleSheet("color: #C8C8C8;")
         self.version_label.adjustSize()
         self._position_version_label()
 
-        # Status label (center)
+        # Status label (center-ish)
         self.status_label = QLabel(self)
         self.status_label.setText("Loading… Checking for updates…")
         sfont = QFont()
@@ -277,14 +251,13 @@ class NovaTurnSplash(QSplashScreen):
         self._phase = "idle"  # "fade_in", "hold", "fade_out"
         self._on_finished_callback = None
 
-
-
     def _position_version_label(self):
-        margin = 40
+        margin = 40  # was 10 — raise text upward
         h = self.pixmap().height()
         self.version_label.move(margin, h - self.version_label.height() - margin)
 
     def _position_status_label(self):
+        # Center horizontally, slightly below vertical center
         w = self.pixmap().width()
         h = self.pixmap().height()
         sw = self.status_label.width()
@@ -300,8 +273,7 @@ class NovaTurnSplash(QSplashScreen):
 
     def start(self, on_finished_callback):
         """
-        Show splash, fade in, warm DB, run async update check,
-        then fade out and call callback.
+        Show splash, fade in, run update check, then fade out and call callback.
         """
         self._on_finished_callback = on_finished_callback
         self._phase = "fade_in"
@@ -320,35 +292,25 @@ class NovaTurnSplash(QSplashScreen):
         self._fade_anim.setEndValue(1.0)
         self._fade_anim.start()
 
-        # Warm database shortly after splash appears
-        QTimer.singleShot(50, self._warm_database)
-
-        # Kick off async update check
+        # Kick off update check shortly after show
         QTimer.singleShot(150, self._run_update_check)
 
-    def _warm_database(self):
-        """Warm SQLite cache asynchronously during splash."""
-        try:
-            from app.db import MediaDatabase
-            db = MediaDatabase()
-            db.get_all_media("")  # warm-up query
-        except Exception:
-            pass
-
     def _run_update_check(self):
-        # Run GitHub check in background (non-blocking)
-        self._thread = UpdateCheckThread()
-        self._thread.finished.connect(self._on_update_result)
-        self._thread.start()
-
-    def _on_update_result(self, latest):
-        # Update version label if GitHub returned a tag
+        # Blocking call, but short; we stay on splash anyway
+        latest = get_latest_version()
         if latest:
             self._latest_tag = latest
             self.version_label.setText(f"Release {latest}")
             self.version_label.adjustSize()
             self._position_version_label()
-        # Do NOT fade out here — fade-out is controlled by fade-in timing
+
+        # Decide when to start fade-out based on min display time
+        now_ms = QtCore.QTime.currentTime().msecsSinceStartOfDay()
+        elapsed = now_ms - (self._start_ms or now_ms)
+        remaining = max(0, self._min_display_ms - elapsed)
+
+        # After remaining time, start fade-out
+        QTimer.singleShot(remaining, self._begin_fade_out)
 
     def _begin_fade_out(self):
         if self._phase == "fade_out":
@@ -362,9 +324,8 @@ class NovaTurnSplash(QSplashScreen):
 
     def _on_fade_finished(self):
         if self._phase == "fade_in":
-            # Fade-in finished — hold splash for 1 second
+            # Just finished fade-in; hold until update check decides to fade out
             self._phase = "hold"
-            QTimer.singleShot(1000, self._begin_fade_out)
             return
 
         if self._phase == "fade_out":
@@ -375,7 +336,6 @@ class NovaTurnSplash(QSplashScreen):
                 self._on_finished_callback = None
                 cb()
             return
-
 
 # ------------------------------------------------------------
 # Bluetooth audio detection helper (must be ABOVE the class)
@@ -476,9 +436,9 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self._apply_stylesheet()
         self._create_protected_menu()
 
-        # Load data AFTER UI exists (deferred to keep startup fast)
-        QtCore.QTimer.singleShot(0, self._load_library)
-        QtCore.QTimer.singleShot(0, self._load_recently_played)
+        # Load data AFTER UI exists
+        self._load_library()
+        self._load_recently_played()
         # VLC events
         # DO NOT MOVE OR ALTER ANYTHING TO DO WITH VLC IN THIS SCRIPT IT WILL BRAKE THE APP
         self._attach_vlc_events()
@@ -1942,6 +1902,8 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
             frame = self.recent_cards[i]["frame"]
             frame.mousePressEvent = lambda e, mid=media_id: self.play_media_id(mid)
+
+        self._load_library()
 
     # ------------------------------------------------------------
     # TRACK EXISTS CHECK
