@@ -39,3 +39,5 @@ Filename: "{app}\NovaTurn.exe"; Flags: nowait postinstall
 
 
 
+
+
