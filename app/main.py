@@ -94,7 +94,6 @@ from PyQt5.QtWidgets import QSplashScreen, QLabel
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import QTimer, QPropertyAnimation, QEasingCurve, QPoint
 from app.ui.osk_final import MiniKeyboard
-from PyQt5.QtCore import QThread, pyqtSignal
 
 # ------------------------------------------------------------
 # Pill-style delegate for "All Artists"
@@ -198,13 +197,6 @@ def prompt_update(parent, latest_tag: str):
 # ============================================================
 #   CINEMATIC SPLASH SCREEN (FADE IN / OUT + VERSION)
 # ============================================================
-class UpdateCheckThread(QThread):
-    finished = pyqtSignal(str)
-
-    def run(self):
-        latest = get_latest_version()
-        self.finished.emit(latest or "")
-
 
 class NovaTurnSplash(QSplashScreen):
     """
@@ -212,9 +204,8 @@ class NovaTurnSplash(QSplashScreen):
       - Shows novaturn_splash.png
       - Bottom-left: 'Release vX.X.X.X'
       - Center text: 'Loading… Checking for updates…'
-      - Fade-in (1s), fade-out (1s)
-      - GitHub update check runs asynchronously
-      - No blocking, no minimum display time
+      - Fade-in (1s), min display (2s), fade-out (1s)
+      - Runs GitHub version check while visible
     """
 
     def __init__(self, app: QtWidgets.QApplication):
@@ -224,22 +215,23 @@ class NovaTurnSplash(QSplashScreen):
 
         # Track timing
         self._start_ms = None
+        self._min_display_ms = 2000  # 2 seconds
         self._fade_duration_ms = 1000  # 1 second
 
         # Latest version from GitHub
         self._latest_tag = None
 
-        # Small version label (bottom-left)
+        # Small, subtle version label (bottom-left)
         self.version_label = QLabel(self)
         self.version_label.setText("Release " + APP_LOCAL_VERSION)
         font = QFont()
-        font.setPointSize(11)
+        font.setPointSize(11)  # small & subtle
         self.version_label.setFont(font)
         self.version_label.setStyleSheet("color: #C8C8C8;")
         self.version_label.adjustSize()
         self._position_version_label()
 
-        # Status label (center)
+        # Status label (center-ish)
         self.status_label = QLabel(self)
         self.status_label.setText("Loading… Checking for updates…")
         sfont = QFont()
@@ -260,11 +252,12 @@ class NovaTurnSplash(QSplashScreen):
         self._on_finished_callback = None
 
     def _position_version_label(self):
-        margin = 40
+        margin = 40  # was 10 — raise text upward
         h = self.pixmap().height()
         self.version_label.move(margin, h - self.version_label.height() - margin)
 
     def _position_status_label(self):
+        # Center horizontally, slightly below vertical center
         w = self.pixmap().width()
         h = self.pixmap().height()
         sw = self.status_label.width()
@@ -280,7 +273,7 @@ class NovaTurnSplash(QSplashScreen):
 
     def start(self, on_finished_callback):
         """
-        Show splash, fade in, run async update check, then fade out and call callback.
+        Show splash, fade in, run update check, then fade out and call callback.
         """
         self._on_finished_callback = on_finished_callback
         self._phase = "fade_in"
@@ -299,32 +292,25 @@ class NovaTurnSplash(QSplashScreen):
         self._fade_anim.setEndValue(1.0)
         self._fade_anim.start()
 
-        # Kick off async update check shortly after show
+        # Kick off update check shortly after show
         QTimer.singleShot(150, self._run_update_check)
 
     def _run_update_check(self):
-        # Run GitHub check in background (non-blocking)
-        class UpdateCheckThread(QtCore.QThread):
-            finished = QtCore.pyqtSignal(str)
-
-            def run(self):
-                latest = get_latest_version()
-                self.finished.emit(latest or "")
-
-        self._thread = UpdateCheckThread()
-        self._thread.finished.connect(self._on_update_result)
-        self._thread.start()
-
-    def _on_update_result(self, latest):
-        # Update version label if GitHub returned a tag
+        # Blocking call, but short; we stay on splash anyway
+        latest = get_latest_version()
         if latest:
             self._latest_tag = latest
             self.version_label.setText(f"Release {latest}")
             self.version_label.adjustSize()
             self._position_version_label()
 
-        # Immediately begin fade-out (no minimum delay)
-        self._begin_fade_out()
+        # Decide when to start fade-out based on min display time
+        now_ms = QtCore.QTime.currentTime().msecsSinceStartOfDay()
+        elapsed = now_ms - (self._start_ms or now_ms)
+        remaining = max(0, self._min_display_ms - elapsed)
+
+        # After remaining time, start fade-out
+        QTimer.singleShot(remaining, self._begin_fade_out)
 
     def _begin_fade_out(self):
         if self._phase == "fade_out":
@@ -338,7 +324,7 @@ class NovaTurnSplash(QSplashScreen):
 
     def _on_fade_finished(self):
         if self._phase == "fade_in":
-            # Finished fade-in; wait for async update to trigger fade-out
+            # Just finished fade-in; hold until update check decides to fade out
             self._phase = "hold"
             return
 
@@ -2458,26 +2444,31 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 def main():
     app = QtWidgets.QApplication(sys.argv)
 
-    # --- Cinematic splash screen with async update check ---
+    # --- Cinematic splash screen with update check ---
     splash = NovaTurnSplash(app)
 
-    # Start splash immediately (fade-in begins)
-    splash.start(lambda: None)
+    # This callback will be called after splash fade-out
+    def launch_main_window():
+        player = MediaPlayer()
 
-    # ------------------------------------------------------------
-    # Build the main window *behind* the splash screen
-    # ------------------------------------------------------------
-    player = MediaPlayer()
-    player.showMaximized()
+        # Force full‑screen on launch
+        player.showMaximized()
 
-    # ------------------------------------------------------------
-    # After splash fade-out, show update prompt if needed
-    # ------------------------------------------------------------
-    def after_splash():
+        # If an update is available, prompt once the main window exists
+        if splash._latest_tag and is_update_newer(APP_LOCAL_VERSION, splash._latest_tag):
+            prompt_update(player, splash._latest_tag)
+    def launch_main_window():
+        player = MediaPlayer()
+
+        # Force full‑screen on launch
+        player.showMaximized()
+
+        # If an update is available, prompt once the main window exists
         if splash._latest_tag and is_update_newer(APP_LOCAL_VERSION, splash._latest_tag):
             prompt_update(player, splash._latest_tag)
 
-    splash._on_finished_callback = after_splash
+
+    splash.start(launch_main_window)
 
     sys.exit(app.exec_())
 
