@@ -14,7 +14,6 @@ def collect_folder(src_folder, dest_folder):
         for f in os.listdir(src_folder)
     ]
 
-
 # Paths inside your project
 assets_path   = os.path.join(project_root, "app", "assets", "branding")
 vlc_path      = os.path.join(project_root, "app", "vlc")
@@ -49,7 +48,6 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
-
 
 pyz = PYZ(a.pure)
 
