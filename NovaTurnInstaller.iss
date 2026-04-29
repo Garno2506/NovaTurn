@@ -38,3 +38,4 @@ Name: "{commondesktop}\NovaTurn"; Filename: "{app}\NovaTurn.exe"; WorkingDir: "{
 Filename: "{app}\NovaTurn.exe"; Flags: nowait postinstall
 
 
+

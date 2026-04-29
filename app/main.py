@@ -133,7 +133,7 @@ else:
 #   APP VERSION + GITHUB UPDATE HELPERS
 # ============================================================
 
-APP_LOCAL_VERSION = "1.0.0.0"  # your current build version
+APP_LOCAL_VERSION = "1.0.0.0"  # GitHub Runner will overwrite this
 GITHUB_OWNER = "Garno2506"
 GITHUB_REPO = "NovaTurn"
 GITHUB_API_LATEST = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
@@ -155,7 +155,7 @@ def get_latest_version():
 
 
 def is_update_newer(local_ver: str, remote_ver: str) -> bool:
-    """Compare two version strings like v1.0.0.0 or 1.0.0.0."""
+    """Compare semantic versions like 1.0.0.79 correctly."""
     if not remote_ver:
         return False
 
@@ -174,7 +174,11 @@ def is_update_newer(local_ver: str, remote_ver: str) -> bool:
             nums.append(0)
         return tuple(nums[:4])
 
-    return norm(remote_ver) > norm(local_ver)
+    try:
+        return norm(remote_ver) > norm(local_ver)
+    except Exception:
+        return False
+
 
 def prompt_update(parent, latest_tag: str):
     """Ask user if they want to open the latest release page."""
@@ -193,6 +197,7 @@ def prompt_update(parent, latest_tag: str):
     if msg.exec_() == QtWidgets.QMessageBox.Yes:
         url = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
         webbrowser.open(url)
+
 
 # ============================================================
 #   CINEMATIC SPLASH SCREEN (FADE IN / OUT + VERSION)
