@@ -21,7 +21,7 @@ vlc_path      = os.path.join(project_root, "app", "vlc")
 banners_path  = os.path.join(project_root, "app", "banners")
 
 a = Analysis(
-    [os.path.join(project_root, 'main.py')],
+    ['app/main.py'],
 
 
     datas=[
