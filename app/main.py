@@ -194,22 +194,6 @@ def prompt_update(parent, latest_tag: str):
         url = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
         webbrowser.open(url)
 
-def prompt_up_to_date(parent, latest_tag: str):
-    """Inform the user that they are already on the latest version."""
-    if not latest_tag:
-        return
-    msg = QtWidgets.QMessageBox(parent)
-    msg.setIcon(QtWidgets.QMessageBox.Information)
-    msg.setWindowTitle("NovaTurn is up to date")
-    msg.setText(
-        f"You are already running the latest NovaTurn release.\n\n"
-        f"Current version: {APP_LOCAL_VERSION}\n"
-        f"Latest on GitHub: {latest_tag}"
-    )
-    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-    msg.exec_()
-
-
 # ============================================================
 #   CINEMATIC SPLASH SCREEN (FADE IN / OUT + VERSION)
 # ============================================================
@@ -2458,10 +2442,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 #  MAIN ENTRY POINT
 # ============================================================
 
-# ============================================================
-#  MAIN ENTRY POINT
-# ============================================================
-
 def main():
     app = QtWidgets.QApplication(sys.argv)
 
@@ -2475,12 +2455,19 @@ def main():
         # Force full‑screen on launch
         player.showMaximized()
 
-        # Update check logic (fixed)
-        if splash._latest_tag:
-            if is_update_newer(APP_LOCAL_VERSION, splash._latest_tag):
-                prompt_update(player, splash._latest_tag)
-            else:
-                prompt_up_to_date(player, splash._latest_tag)
+        # If an update is available, prompt once the main window exists
+        if splash._latest_tag and is_update_newer(APP_LOCAL_VERSION, splash._latest_tag):
+            prompt_update(player, splash._latest_tag)
+    def launch_main_window():
+        player = MediaPlayer()
+
+        # Force full‑screen on launch
+        player.showMaximized()
+
+        # If an update is available, prompt once the main window exists
+        if splash._latest_tag and is_update_newer(APP_LOCAL_VERSION, splash._latest_tag):
+            prompt_update(player, splash._latest_tag)
+
 
     splash.start(launch_main_window)
 

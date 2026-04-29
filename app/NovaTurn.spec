@@ -7,8 +7,6 @@ import sys
 project_root = os.path.abspath(os.getcwd())
 
 
-
-
 # Helper to include entire folders cleanly
 def collect_folder(src_folder, dest_folder):
     return [
@@ -22,8 +20,9 @@ vlc_path      = os.path.join(project_root, "app", "vlc")
 banners_path  = os.path.join(project_root, "app", "banners")
 
 a = Analysis(
-    ['app/main.py'],
-
+    ['main.py'],          # You run Run.py, but PyInstaller builds from main.py
+    pathex=[project_root],
+    binaries=[],
 
     datas=[
         # Branding assets
