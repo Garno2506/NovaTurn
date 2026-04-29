@@ -94,7 +94,7 @@ from PyQt5.QtWidgets import QSplashScreen, QLabel
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import QTimer, QPropertyAnimation, QEasingCurve, QPoint
 from app.ui.osk_final import MiniKeyboard
-
+from PyQt5.QtCore import QThread, pyqtSignal
 # ------------------------------------------------------------
 # Pill-style delegate for "All Artists"
 # ------------------------------------------------------------
@@ -197,6 +197,13 @@ def prompt_update(parent, latest_tag: str):
 # ============================================================
 #   CINEMATIC SPLASH SCREEN (FADE IN / OUT + VERSION)
 # ============================================================
+class UpdateCheckThread(QThread):
+    finished = pyqtSignal(str)
+
+    def run(self):
+        latest = get_latest_version()
+        self.finished.emit(latest or "")
+
 
 class NovaTurnSplash(QSplashScreen):
     """
@@ -296,21 +303,22 @@ class NovaTurnSplash(QSplashScreen):
         QTimer.singleShot(150, self._run_update_check)
 
     def _run_update_check(self):
-        # Blocking call, but short; we stay on splash anyway
-        latest = get_latest_version()
+        # Run GitHub check in background
+        self._thread = UpdateCheckThread()
+        self._thread.finished.connect(self._on_update_result)
+        self._thread.start()
+
+    def _on_update_result(self, latest):
         if latest:
             self._latest_tag = latest
             self.version_label.setText(f"Release {latest}")
             self.version_label.adjustSize()
             self._position_version_label()
 
-        # Decide when to start fade-out based on min display time
-        now_ms = QtCore.QTime.currentTime().msecsSinceStartOfDay()
-        elapsed = now_ms - (self._start_ms or now_ms)
-        remaining = max(0, self._min_display_ms - elapsed)
+        # Continue to fade-out immediately
+        self._begin_fade_out()
 
-        # After remaining time, start fade-out
-        QTimer.singleShot(remaining, self._begin_fade_out)
+
 
     def _begin_fade_out(self):
         if self._phase == "fade_out":
@@ -364,8 +372,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
-        # Prevent white flash on startup
-        self.setStyleSheet("background-color: #000000;")
 
         self.setWindowFlags(
             QtCore.Qt.Window
