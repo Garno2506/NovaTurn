@@ -4,7 +4,8 @@ import os
 import sys
 
 # PyInstaller-safe project root
-project_root = os.path.abspath(os.getcwd())
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
 
 
 # Helper to include entire folders cleanly
