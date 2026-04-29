@@ -436,9 +436,9 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         self._apply_stylesheet()
         self._create_protected_menu()
 
-        # Load data AFTER UI exists
-        self._load_library()
-        self._load_recently_played()
+        # Load data AFTER UI exists (deferred to keep startup fast)
+        QtCore.QTimer.singleShot(0, self._load_library)
+        QtCore.QTimer.singleShot(0, self._load_recently_played)
         # VLC events
         # DO NOT MOVE OR ALTER ANYTHING TO DO WITH VLC IN THIS SCRIPT IT WILL BRAKE THE APP
         self._attach_vlc_events()
@@ -1903,7 +1903,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             frame = self.recent_cards[i]["frame"]
             frame.mousePressEvent = lambda e, mid=media_id: self.play_media_id(mid)
 
-        self._load_library()
 
     # ------------------------------------------------------------
     # TRACK EXISTS CHECK
