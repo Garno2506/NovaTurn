@@ -197,6 +197,7 @@ def prompt_update(parent, latest_tag: str):
 # ============================================================
 #   CINEMATIC SPLASH SCREEN (FADE IN / OUT + VERSION)
 # ============================================================
+
 class UpdateCheckThread(QThread):
     finished = pyqtSignal(str)
 
@@ -211,8 +212,10 @@ class NovaTurnSplash(QSplashScreen):
       - Shows novaturn_splash.png
       - Bottom-left: 'Release vX.X.X.X'
       - Center text: 'Loading… Checking for updates…'
-      - Fade-in (1s), min display (2s), fade-out (1s)
-      - Runs GitHub version check while visible
+      - Fade-in (1s), hold 1s, fade-out (1s)
+      - Async GitHub update check
+      - Async database warm-up
+      - No blocking, no minimum display delay
     """
 
     def __init__(self, app: QtWidgets.QApplication):
@@ -220,24 +223,24 @@ class NovaTurnSplash(QSplashScreen):
         super().__init__(pix)
         self.app = app
 
-        # Track timing
+        # Timing
         self._start_ms = None
         self._fade_duration_ms = 1000  # 1 second
 
         # Latest version from GitHub
         self._latest_tag = None
 
-        # Small, subtle version label (bottom-left)
+        # Version label (bottom-left)
         self.version_label = QLabel(self)
         self.version_label.setText("Release " + APP_LOCAL_VERSION)
         font = QFont()
-        font.setPointSize(11)  # small & subtle
+        font.setPointSize(11)
         self.version_label.setFont(font)
         self.version_label.setStyleSheet("color: #C8C8C8;")
         self.version_label.adjustSize()
         self._position_version_label()
 
-        # Status label (center-ish)
+        # Status label (center)
         self.status_label = QLabel(self)
         self.status_label.setText("Loading… Checking for updates…")
         sfont = QFont()
@@ -258,12 +261,11 @@ class NovaTurnSplash(QSplashScreen):
         self._on_finished_callback = None
 
     def _position_version_label(self):
-        margin = 40  # was 10 — raise text upward
+        margin = 40
         h = self.pixmap().height()
         self.version_label.move(margin, h - self.version_label.height() - margin)
 
     def _position_status_label(self):
-        # Center horizontally, slightly below vertical center
         w = self.pixmap().width()
         h = self.pixmap().height()
         sw = self.status_label.width()
@@ -279,7 +281,8 @@ class NovaTurnSplash(QSplashScreen):
 
     def start(self, on_finished_callback):
         """
-        Show splash, fade in, run update check, then fade out and call callback.
+        Show splash, fade in, warm DB, run async update check,
+        then fade out and call callback.
         """
         self._on_finished_callback = on_finished_callback
         self._phase = "fade_in"
@@ -298,18 +301,23 @@ class NovaTurnSplash(QSplashScreen):
         self._fade_anim.setEndValue(1.0)
         self._fade_anim.start()
 
-        # Kick off update check shortly after show
+        # Warm database shortly after splash appears
+        QTimer.singleShot(50, self._warm_database)
+
+        # Kick off async update check
         QTimer.singleShot(150, self._run_update_check)
 
+    def _warm_database(self):
+        """Warm SQLite cache asynchronously during splash."""
+        try:
+            from app.db import MediaDatabase
+            db = MediaDatabase()
+            db.get_all_media("")  # warm-up query
+        except Exception:
+            pass
+
     def _run_update_check(self):
-        # Run GitHub check in background (non‑blocking)
-        class UpdateCheckThread(QtCore.QThread):
-            finished = QtCore.pyqtSignal(str)
-
-            def run(self):
-                latest = get_latest_version()
-                self.finished.emit(latest or "")
-
+        # Run GitHub check in background (non-blocking)
         self._thread = UpdateCheckThread()
         self._thread.finished.connect(self._on_update_result)
         self._thread.start()
@@ -321,9 +329,7 @@ class NovaTurnSplash(QSplashScreen):
             self.version_label.setText(f"Release {latest}")
             self.version_label.adjustSize()
             self._position_version_label()
-
-        # Immediately begin fade‑out (no minimum delay)
-        self._begin_fade_out()
+        # Do NOT fade out here — fade-out is controlled by fade-in timing
 
     def _begin_fade_out(self):
         if self._phase == "fade_out":
@@ -337,8 +343,9 @@ class NovaTurnSplash(QSplashScreen):
 
     def _on_fade_finished(self):
         if self._phase == "fade_in":
-            # Finished fade‑in; wait for update thread to trigger fade‑out
+            # Fade-in finished — hold splash for 1 second
             self._phase = "hold"
+            QTimer.singleShot(1000, self._begin_fade_out)
             return
 
         if self._phase == "fade_out":
