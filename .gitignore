@@ -1,7 +1,10 @@
 # --- Python ---
 __pycache__/
+**/__pycache__/
 *.pyc
+**/*.pyc
 *.pyo
+**/*.pyo
 *.pyd
 *.pdb
 
@@ -41,7 +44,6 @@ Thumbs.db
 .cache/
 
 # --- GitHub Runner (IMPORTANT) ---
-# Prevent ALL runner files from polluting the repo
 _runner/
 _runner_migrated
 pipelineFolder.json
