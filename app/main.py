@@ -222,7 +222,6 @@ class NovaTurnSplash(QSplashScreen):
 
         # Track timing
         self._start_ms = None
-        self._min_display_ms = 2000  # 2 seconds
         self._fade_duration_ms = 1000  # 1 second
 
         # Latest version from GitHub
@@ -303,22 +302,28 @@ class NovaTurnSplash(QSplashScreen):
         QTimer.singleShot(150, self._run_update_check)
 
     def _run_update_check(self):
-        # Run GitHub check in background
+        # Run GitHub check in background (non‑blocking)
+        class UpdateCheckThread(QtCore.QThread):
+            finished = QtCore.pyqtSignal(str)
+
+            def run(self):
+                latest = get_latest_version()
+                self.finished.emit(latest or "")
+
         self._thread = UpdateCheckThread()
         self._thread.finished.connect(self._on_update_result)
         self._thread.start()
 
     def _on_update_result(self, latest):
+        # Update version label if GitHub returned a tag
         if latest:
             self._latest_tag = latest
             self.version_label.setText(f"Release {latest}")
             self.version_label.adjustSize()
             self._position_version_label()
 
-        # Continue to fade-out immediately
+        # Immediately begin fade‑out (no minimum delay)
         self._begin_fade_out()
-
-
 
     def _begin_fade_out(self):
         if self._phase == "fade_out":
@@ -332,7 +337,7 @@ class NovaTurnSplash(QSplashScreen):
 
     def _on_fade_finished(self):
         if self._phase == "fade_in":
-            # Just finished fade-in; hold until update check decides to fade out
+            # Finished fade‑in; wait for update thread to trigger fade‑out
             self._phase = "hold"
             return
 
@@ -344,6 +349,7 @@ class NovaTurnSplash(QSplashScreen):
                 self._on_finished_callback = None
                 cb()
             return
+
 
 # ------------------------------------------------------------
 # Bluetooth audio detection helper (must be ABOVE the class)
