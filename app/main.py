@@ -364,6 +364,8 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
+        # Prevent white flash on startup
+        self.setStyleSheet("background-color: #000000;")
 
         self.setWindowFlags(
             QtCore.Qt.Window
@@ -1902,7 +1904,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
 
             frame = self.recent_cards[i]["frame"]
             frame.mousePressEvent = lambda e, mid=media_id: self.play_media_id(mid)
-
 
     # ------------------------------------------------------------
     # TRACK EXISTS CHECK
