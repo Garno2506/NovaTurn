@@ -237,7 +237,19 @@ class NovaTurnSplash(QSplashScreen):
 
         # Version label (bottom-left)
         self.version_label = QLabel(self)
-        self.version_label.setText("Release " + APP_LOCAL_VERSION)
+
+        # --- FIX: Read version from EXE metadata (no pkg_resources) ---
+        try:
+            import win32api
+            info = win32api.GetFileVersionInfo(sys.executable, '\\')
+            ms = info['FileVersionMS']
+            ls = info['FileVersionLS']
+            version = f"{ms >> 16}.{ms & 0xFFFF}.{ls >> 16}.{ls & 0xFFFF}"
+        except Exception:
+            version = "1.0.0.0"
+
+        self.version_label.setText(f"Release {version}")
+
         font = QFont()
         font.setPointSize(11)
         self.version_label.setFont(font)
@@ -264,6 +276,8 @@ class NovaTurnSplash(QSplashScreen):
 
         self._phase = "idle"  # "fade_in", "hold", "fade_out"
         self._on_finished_callback = None
+
+
 
     def _position_version_label(self):
         margin = 40
