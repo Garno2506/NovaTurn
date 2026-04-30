@@ -143,6 +143,3 @@ def add_to_recently_played(db, media_id: int):
         db.add_recently_played(media_id)
     except Exception as e:
         print("Failed to add recently played:", e)
-
-
-
