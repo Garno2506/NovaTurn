@@ -66,4 +66,3 @@ if __name__ == "__main__":
     ensure_pyinstaller()
     build_exe(sys.argv[1])
 
-
