@@ -9,7 +9,6 @@ from PyQt5.QtChart import (
     QValueAxis,
 )
 
-
 class StatisticsMixin:
     """
     Provides statistics page functionality.
