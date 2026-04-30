@@ -1,8 +1,6 @@
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 import os
-
 
 def resource_path_dev(relative_path):
     """
@@ -11,7 +9,6 @@ def resource_path_dev(relative_path):
     base = os.path.dirname(os.path.dirname(__file__))  # ui → app
     return os.path.join(base, relative_path)
 
-
 def resource_path(relative_path):
     """
     PyInstaller-safe path resolver.
@@ -19,7 +16,6 @@ def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
     return resource_path_dev(relative_path)
-
 
 class MiniKeyboard(QtWidgets.QFrame):
     keyPressed = QtCore.pyqtSignal(str)
