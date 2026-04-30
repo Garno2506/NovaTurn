@@ -246,4 +246,3 @@ class DialogsMixin:
         btn_close.clicked.connect(dialog.close)
 
         dialog.exec_()
-
