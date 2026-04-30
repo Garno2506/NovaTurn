@@ -39,7 +39,6 @@ jobs:
           powershell -Command "(Get-Content app/main.py) -replace 'APP_LOCAL_VERSION = \"[0-9\.]+\"', 'APP_LOCAL_VERSION = \"%VERSION%\"' | Set-Content app/main.py"
           echo Injected version %VERSION% into app/main.py
 
-
       - name: Build EXE using PyInstaller
         shell: cmd
         run: |
