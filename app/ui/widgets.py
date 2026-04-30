@@ -16,7 +16,6 @@ class VideoWidget(QtWidgets.QFrame):
         """Return the native window handle (HWND on Windows)."""
         return int(self.winId())
 
-
 class EqualizerWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, bars=12):
         super().__init__(parent)
