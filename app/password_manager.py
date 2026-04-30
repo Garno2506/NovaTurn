@@ -77,5 +77,3 @@ class PasswordManager:
 
     def reset_to_default(self) -> None:
         self._write_password(self.default_password)
-
-
