@@ -442,4 +442,3 @@ class PlaybackMixin:
             self.eq_widget.set_levels(levels)
         else:
             self.eq_widget.clear_levels()
-
