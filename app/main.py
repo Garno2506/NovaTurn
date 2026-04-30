@@ -195,7 +195,6 @@ def prompt_update(parent, latest_tag: str):
         url = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
         webbrowser.open(url)
 
-
 # ============================================================
 #   CINEMATIC SPLASH SCREEN (FADE IN / OUT + VERSION)
 # ============================================================
@@ -552,9 +551,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
         sidebar_layout.addWidget(self.btn_nav_library)
         sidebar_layout.addWidget(self.btn_nav_now_playing)
         sidebar_layout.addWidget(self.btn_nav_stats)
-
-
-
 
         self.btn_nav_eq = nav("EQ")
         self.btn_nav_eq.clicked.connect(self.open_graphic_equalizer)
@@ -2380,7 +2376,6 @@ class MediaPlayer(DialogsMixin, StylesMixin, QtWidgets.QMainWindow):
             if self.search_edit.hasFocus():
                 self.search_edit.clear()
                 return True
-
 
         # ------------------------------------------------------------
         # OSK OPENS OSK WHEN SEARCH LIBRARY GETS FOCUS UNLESS OSK BUTTON IS OFF
