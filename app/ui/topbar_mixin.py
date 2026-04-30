@@ -1,7 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from app.help_window import HelpWindow
 
-
 class TopBarMixin:
     """
     Provides the top bar for the Library page:
@@ -123,7 +122,6 @@ class TopBarMixin:
         yt_layout.addSpacing(62)
 
         top_bar.addWidget(youtube_container)
-
 
         # ------------------------------------------------------------
         # Right‑side buttons
