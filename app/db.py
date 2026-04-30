@@ -4,7 +4,6 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime
 
-
 # ------------------------------------------------------------
 # Resolve %APPDATA%\NovaTurn
 # ------------------------------------------------------------
@@ -13,11 +12,9 @@ def appdata_folder() -> Path:
     folder.mkdir(parents=True, exist_ok=True)
     return folder
 
-
 def db_path() -> Path:
     """Return the full path to the persistent media database."""
     return appdata_folder() / "media_library.db"
-
 
 # ------------------------------------------------------------
 # Utility helpers (needed by main.py)
@@ -29,11 +26,9 @@ def format_duration(seconds: int) -> str:
     s = seconds % 60
     return f"{m}:{s:02d}"
 
-
 def is_video_file(path: str) -> bool:
     ext = Path(path).suffix.lower()
     return ext in {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm"}
-
 
 # ------------------------------------------------------------
 # MediaDatabase — main SQLite interface
