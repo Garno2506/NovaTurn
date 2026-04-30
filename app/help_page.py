@@ -134,7 +134,6 @@ class HelpPageOSK(QtWidgets.QFrame):
         self._drag_active = False
         event.accept()
 
-
 # ---------------------------------------------------------
 # Custom QLineEdit (OSK-friendly)
 # ---------------------------------------------------------
@@ -152,7 +151,6 @@ class OSKLineEdit(QtWidgets.QLineEdit):
         if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
             self.enterPressed.emit()
         super().keyPressEvent(event)
-
 
 # ---------------------------------------------------------
 # Help Page
@@ -244,7 +242,6 @@ class HelpPage(QtWidgets.QWidget):
 
         main_layout.addLayout(columns)
 
-
         main_layout.addStretch()
 
         self.help_search.textChanged.connect(self._run_search)
@@ -258,7 +255,6 @@ class HelpPage(QtWidgets.QWidget):
         self.help_osk = HelpPageOSK(self)
         self.help_osk.hide()
         self.help_osk.keyPressed.connect(self._handle_osk_key)
-
 
     # ---------------------------------------------------------
     # Column factory
@@ -404,8 +400,6 @@ class HelpPage(QtWidgets.QWidget):
             col.setTextCursor(cursor)
             col.verticalScrollBar().setValue(0)
 
-
-
     def reset_page(self):
         self.help_search.clear()
         self._clear_highlights()
@@ -487,10 +481,6 @@ class HelpPage(QtWidgets.QWidget):
             y = parent_rect.height() - osk_height - 20 - 96
 
             self.help_osk.move(self.mapToGlobal(QtCore.QPoint(x, y)))
-
-
-
-
 
     # ---------------------------------------------------------
     # Handle OSK key input
