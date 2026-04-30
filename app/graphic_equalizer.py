@@ -309,7 +309,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
         # Force-remove the Windows icon
         self.setWindowIcon(QtGui.QIcon())
 
-
         self.led_meters = []   # LED bars for each slider
         self.peak_levels = [0.0] * 10
 
@@ -355,7 +354,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
         self._build_ui()
         self._load_user_presets()
         self._load_state()
-
 
         self._update_curve()
         self._apply_to_vlc()
@@ -549,7 +547,6 @@ class GraphicEqualizer(QtWidgets.QWidget):
         idx = self.preset_combo.findText("★ Pop")
         if idx >= 0:
             self.preset_combo.setCurrentIndex(idx)
-
 
         btn_apply = QtWidgets.QPushButton("Apply Preset")
         btn_apply.setStyleSheet(self._button_style())
